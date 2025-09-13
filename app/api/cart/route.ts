@@ -32,11 +32,11 @@ export async function GET() {
   }
   // Fetch products
   const products = await prisma.product.findMany({ where: { id: { in: cart.items.map(i => i.productId) } }, select: { id: true, name: true, price: true } });
-  const map = new Map(products.map(p => [p.id, p]));
+  const map = new Map(products.map((p :any)=> [p.id, p]));
   const enriched = cart.items
     .filter(i => map.has(i.productId))
-    .map(i => {
-      const p = map.get(i.productId)!;
+    .map((i: any) => {
+      const p: any = map.get(i.productId)!;
       const price = Number(p.price); // Decimal to number
       const lineTotal = price * i.qty;
       return { ...i, name: p.name, price, lineTotal };

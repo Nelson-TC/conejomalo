@@ -11,8 +11,8 @@ export default async function CheckoutPage() {
 	try { if (raw) { const parsed = JSON.parse(raw); if (Array.isArray(parsed.items)) items = parsed.items; } } catch {}
 	if (items.length) {
 		const products = await prisma.product.findMany({ where: { id: { in: items.map(i=>i.productId) } }, select: { id:true, name:true, price:true } });
-		const map = new Map(products.map(p=>[p.id,p]));
-		const enriched = items.filter(i=>map.has(i.productId)).map(i=>{ const p = map.get(i.productId)!; const price = Number(p.price); return { ...i, name: p.name, price, lineTotal: price * i.qty }; });
+		const map = new Map(products.map((p: any)=>[p.id,p]));
+		const enriched = items.filter(i=>map.has(i.productId)).map(i=>{ const p: any = map.get(i.productId)!; const price = Number(p.price); return { ...i, name: p.name, price, lineTotal: price * i.qty }; });
 		const subtotal = enriched.reduce((s,i)=>s+i.lineTotal,0);
 		return (
 			<div className="max-w-4xl space-y-8">

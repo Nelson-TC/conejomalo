@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
 		if (cart.items.length === 0) return new Response(JSON.stringify({ error: 'Carrito vacío' }), { status: 400 });
 		const products = await prisma.product.findMany({ where: { id: { in: cart.items.map(i => i.productId) } }, select: { id: true, price: true, name: true, slug: true } });
 		if (products.length === 0) return new Response(JSON.stringify({ error: 'Productos no encontrados' }), { status: 400 });
-		const map: Map<string, { id: string; price: any; name: string; slug: string }> = new Map(products.map(p => [p.id, p]));
+		const map: Map<string, { id: string; price: any; name: string; slug: string }> = new Map(products.map((p: any) => [p.id, p]));
 		const orderItemsData = cart.items
 			.filter(ci => map.has(ci.productId))
 			.map(ci => {

@@ -22,7 +22,7 @@ export default async function CategoryPage({ params }: Props) {
 				<p className="text-sm text-neutral-600">Productos de la categoría.</p>
 			</div>
 			<div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-				{products.map(p => <ProductCard key={p.id} product={p as any} />)}
+				{products.map((p: any) => <ProductCard key={p.id} product={p as any} />)}
 				{products.length === 0 && <p className="text-sm col-span-full text-neutral-600">Sin productos.</p>}
 			</div>
 		</div>

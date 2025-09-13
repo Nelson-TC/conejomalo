@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import '../globals.css';
+import '../../globals.css';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
 	return (
@@ -15,7 +15,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 					</div>
 				</div>
 			</header>
-			<main className="container-app py-8 space-y-8">
+			<main className="py-8 space-y-8 container-app">
 				{children}
 			</main>
 		</div>
