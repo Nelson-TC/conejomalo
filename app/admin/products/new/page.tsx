@@ -12,10 +12,19 @@ export default function NewProductPage() {
 	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
-		fetch('/api/categories').then(r=>r.json()).then(d=>{
-			setCategories(d);
-			if (d.length) setForm(f=>({ ...f, categoryId: d[0].id }));
-		});
+		let cancelled = false;
+		(async () => {
+			try {
+				const res = await fetch('/api/categories', { cache: 'no-store' });
+				if (!res.ok) return; // silencioso
+				const data = await res.json();
+				const list: Category[] = Array.isArray(data?.categories) ? data.categories : Array.isArray(data) ? data : [];
+				if (cancelled) return;
+				setCategories(list);
+				if (list.length) setForm(f=>({ ...f, categoryId: list[0].id }));
+			} catch {}
+		})();
+		return () => { cancelled = true; };
 	}, []);
 
 	function update<K extends keyof typeof form>(key: K, value: (typeof form)[K]) { setForm(f => ({ ...f, [key]: value })); }
@@ -36,7 +45,8 @@ export default function NewProductPage() {
 				<input className="w-full px-3 py-2 border rounded" placeholder="Nombre" value={form.name} onChange={e=>update('name', e.target.value)} required />
 				<div className="flex gap-4">
 					<input className="w-full px-3 py-2 border rounded" type="number" step="0.01" placeholder="Precio" value={form.price} onChange={e=>update('price', e.target.value)} required />
-					<select className="w-full px-3 py-2 border rounded" value={form.categoryId} onChange={e=>update('categoryId', e.target.value)}>
+					<select className="w-full px-3 py-2 border rounded" value={form.categoryId} onChange={e=>update('categoryId', e.target.value)} disabled={!categories.length}>
+						{categories.length === 0 && <option value="">Sin categorías</option>}
 						{categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
 					</select>
 				</div>
