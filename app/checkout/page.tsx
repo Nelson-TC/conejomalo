@@ -5,6 +5,8 @@ import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
+// Ahora el formateo global ya utiliza GTQ, no se requiere wrapper local
+
 export default async function CheckoutPage() {
 	const raw = cookies().get('cart')?.value;
 	let items: { productId: string; qty: number }[] = [];

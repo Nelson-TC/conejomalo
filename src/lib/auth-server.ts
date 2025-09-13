@@ -1,16 +1,24 @@
-import { cookies } from 'next/headers';
 import { prisma } from './prisma';
+import { getSession } from './auth';
 
-const USER_COOKIE = 'auth_user_id';
-
+/**
+ * Obtiene el usuario autenticado basándose en el JWT (cookie 'session').
+ * Si el token es inválido o el usuario ya no existe, retorna null.
+ */
 export async function getCurrentUser() {
   try {
-    const id = cookies().get(USER_COOKIE)?.value;
+    const session = await getSession();
+    if (!session) return null;
+    const id = session.sub;
     if (!id) return null;
-  // @ts-ignore (temporal si TS no refrescó tipos de Prisma)
-  const user = await prisma.user.findUnique({ where: { id }, select: { id: true, email: true, name: true, role: true } });
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: { id: true, email: true, name: true, role: true }
+    });
     return user;
-  } catch { return null; }
+  } catch (e) {
+    return null;
+  }
 }
 
 export function requireUser() {

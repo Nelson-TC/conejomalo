@@ -39,7 +39,7 @@ export default function ProductCard({ product, compactCategory }: ProductCardPro
         )}
       </div>
       <div className="flex items-center justify-between pt-1">
-        <span className="font-semibold">{formatCurrency(Number(product.price))}</span>
+  <span className="font-semibold">{formatCurrency(Number(product.price))}</span>
         <AddToCartButton productId={product.id} qty={1} className="!text-xs" label="+ Carrito" />
       </div>
     </div>
