@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  passwordHash String    @default("")
+  role         Role      @default(USER)
+  orders       Order[]
+  products     Product[]
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  slug      String    @unique
+  createdAt DateTime  @default(now())
+  active    Boolean   @default(true)
+  imageUrl  String?
+  products  Product[]
+}
+
+model Product {
+  id          String      @id @default(cuid())
+  name        String
+  slug        String      @unique
+  description String?
+  price       Decimal     @db.Decimal(10, 2)
+  imageUrl    String?
+  categoryId  String
+  userId      String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  active      Boolean     @default(true)
+  orderItems  OrderItem[]
+  category    Category    @relation(fields: [categoryId], references: [id])
+  user        User?       @relation(fields: [userId], references: [id])
+}
+
+model Order {
+  id        String      @id @default(cuid())
+  customer  String
+  email     String
+  address   String
+  subtotal  Decimal     @db.Decimal(10, 2)
+  total     Decimal     @db.Decimal(10, 2)
+  createdAt DateTime    @default(now())
+  phone     String
+  userId    String?
+  user      User?       @relation(fields: [userId], references: [id])
+  items     OrderItem[]
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  productId String
+  name      String
+  slug      String
+  unitPrice Decimal @db.Decimal(10, 2)
+  quantity  Int
+  order     Order   @relation(fields: [orderId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
