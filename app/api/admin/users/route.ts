@@ -23,11 +23,21 @@ export async function POST(req: Request) {
 	try {
 		await requirePermission('user:create');
 		const body = await req.json();
-		const { email, name } = body;
+		const email = String(body.email||'').trim();
+		const name = body.name? String(body.name).trim(): null;
+		const roleIds: string[] = Array.isArray(body.roleIds)? body.roleIds.filter((r: any)=> typeof r === 'string') : [];
 		if (!email) return err(400,'EMAIL_REQUIRED','Email required');
-		const user = await prisma.user.create({ data: { email, name } });
-		logAudit('user.create','User', user.id, { email });
-		return NextResponse.json(user, { status: 201 });
+		const existing = await prisma.user.findUnique({ where: { email } });
+		if (existing) return err(409,'USER_EXISTS','User already exists');
+		const created = await prisma.user.create({ data: { email, name } });
+		if (roleIds.length) {
+			const validRoles = await prisma.roleEntity.findMany({ where: { id: { in: roleIds } }, select: { id: true } });
+			if (validRoles.length) {
+				await prisma.userRole.createMany({ data: validRoles.map(r=>({ userId: created.id, roleId: r.id })) });
+			}
+		}
+		logAudit('user.create','User', created.id, { email, roleIds });
+		return NextResponse.json(created, { status: 201 });
 	} catch (e: any) {
 		if (e instanceof Error) {
 			if (e.message === 'UNAUTHENTICATED') return err(401,'UNAUTHENTICATED');

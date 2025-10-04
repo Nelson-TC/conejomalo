@@ -24,9 +24,18 @@ export async function PUT(req: Request, { params }: Params) {
 	try {
 		await requirePermission('user:update');
 		const body = await req.json();
-		const { name } = body;
+		const name = body.name? String(body.name).trim(): null;
+		const roleIds: string[] = Array.isArray(body.roleIds)? body.roleIds.filter((r:any)=> typeof r === 'string') : [];
 		const user = await prisma.user.update({ where: { id: params.id }, data: { name } });
-		logAudit('user.update','User', user.id, { name });
+		// Sync roles: remove all then add present (simple approach; could diff if needed)
+		await prisma.userRole.deleteMany({ where: { userId: user.id } });
+		if (roleIds.length) {
+			const validRoles = await prisma.roleEntity.findMany({ where: { id: { in: roleIds } }, select: { id: true } });
+			if (validRoles.length) {
+				await prisma.userRole.createMany({ data: validRoles.map(r=>({ userId: user.id, roleId: r.id })) });
+			}
+		}
+		logAudit('user.update','User', user.id, { name, roleIds });
 		return NextResponse.json(user);
 	} catch (e: any) {
 		if (e instanceof Error) {

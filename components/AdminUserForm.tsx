@@ -5,28 +5,32 @@ import { mapApiError } from '../src/lib/client-errors';
 import { usePermissions } from '../src/lib/use-permissions';
 
 interface UserFormValues {
-	id?: string;
-	email: string;
-	name: string;
-	role: 'USER' | 'ADMIN';
-	password?: string;
+  id?: string;
+  email: string;
+  name: string;
+  password?: string;
+  roleIds: string[]; // multi-role assignment
 }
+
+interface RoleOption { id: string; name: string; label: string }
 
 interface AdminUserFormProps {
-	initial?: Partial<UserFormValues> | null;
+	initial?: any | null;
 	mode?: 'create' | 'edit';
+	roles?: RoleOption[]; // available roles from server
+	initialRoleIds?: string[]; // pre-assigned role ids
 }
 
-export default function AdminUserForm({ initial, mode='create' }: AdminUserFormProps) {
+export default function AdminUserForm({ initial, mode='create', roles = [], initialRoleIds = [] }: AdminUserFormProps) {
 	const router = useRouter();
 	const [isPending, startTransition] = useTransition();
 	const [values, setValues] = useState<UserFormValues>({
-		id: initial?.id,
-		email: initial?.email || '',
-		name: initial?.name || '',
-		role: (initial?.role as any) || 'USER',
-		password: ''
-	});
+    id: initial?.id,
+    email: initial?.email || '',
+    name: initial?.name || '',
+    password: '',
+    roleIds: initialRoleIds || []
+  });
 	const [errors, setErrors] = useState<Record<string,string>>({});
 	const [serverError, setServerError] = useState<string|null>(null);
 	const [serverSuccess, setServerSuccess] = useState<string|null>(null);
@@ -43,15 +47,19 @@ export default function AdminUserForm({ initial, mode='create' }: AdminUserFormP
 	}
 
 	function update<K extends keyof UserFormValues>(key: K, val: UserFormValues[K]) {
-		setValues(s=>({ ...s, [key]: val }));
-		if (errors[key as string]) setErrors(e=>{ const c={...e}; delete c[key as string]; return c; });
+		setValues(s => ({ ...s, [key]: val }));
+		if (errors[key as string]) setErrors(e => { const c = { ...e }; delete c[key as string]; return c; });
+	}
+
+	function toggleRole(id: string) {
+		setValues(s => ({ ...s, roleIds: s.roleIds.includes(id) ? s.roleIds.filter(r => r !== id) : [...s.roleIds, id] }));
 	}
 
 	async function onSubmit(ev: React.FormEvent) {
 		ev.preventDefault();
 		setServerError(null); setServerSuccess(null);
 		const e = validate(values); setErrors(e); if (Object.keys(e).length) return;
-		const payload: any = { email: values.email.trim(), name: values.name.trim() || null, role: values.role };
+		const payload: any = { email: values.email.trim(), name: values.name.trim() || null, roleIds: values.roleIds };
 		if (values.password) payload.password = values.password;
 		startTransition(async ()=>{
 			try {
@@ -89,12 +97,29 @@ export default function AdminUserForm({ initial, mode='create' }: AdminUserFormP
 					<input id="name" value={values.name} onChange={e=>update('name', e.target.value)} className="w-full px-3 py-2 text-sm rounded-md border bg-white border-neutral-300 focus:outline-none focus:ring-2 focus:ring-carrot/50" placeholder="Nombre opcional" />
 				</div>
 				<div className="space-y-2">
-					<label htmlFor="role" className="text-sm font-medium text-neutral-700">Rol</label>
-					<select id="role" value={values.role} onChange={e=>update('role', e.target.value as any)} className="w-full px-3 py-2 text-sm rounded-md border bg-white border-neutral-300 focus:outline-none focus:ring-2 focus:ring-carrot/50">
-						<option value="USER">Usuario</option>
-						<option value="ADMIN">Administrador</option>
-					</select>
-				</div>
+						<span className="text-sm font-medium text-neutral-700">Roles</span>
+						{roles.length === 0 && <p className="text-xs text-neutral-500">No hay roles disponibles.</p>}
+						<ul className="space-y-1 max-h-44 overflow-auto pr-1 border rounded-md p-2 bg-white border-neutral-200">
+							{roles.map(r => {
+								const active = values.roleIds.includes(r.id);
+								return (
+									<li key={r.id} className="flex items-center gap-2 text-sm">
+										<label className="inline-flex items-center gap-2 cursor-pointer select-none">
+											<input
+												type="checkbox"
+												className="w-4 h-4 rounded border-neutral-300 text-carrot focus:ring-carrot/50 focus:outline-none"
+												checked={active}
+												onChange={()=>toggleRole(r.id)}
+												disabled={cannotEdit}
+											/>
+											<span className="font-medium text-neutral-700">{r.label || r.name}</span>
+										</label>
+									</li>
+								);
+							})}
+						</ul>
+						<p className="text-[11px] text-neutral-500">Selecciona uno o más roles para este usuario.</p>
+					</div>
 				<div className="space-y-2">
 					<label htmlFor="password" className="text-sm font-medium text-neutral-700">Contraseña {mode==='create' && <span className="text-red-500">*</span>}</label>
 					<input id="password" type="password" value={values.password} onChange={e=>update('password', e.target.value)} className={`w-full px-3 py-2 text-sm rounded-md border bg-white focus:outline-none focus:ring-2 ${errors.password? 'border-red-400 ring-red-200':'border-neutral-300 focus:ring-carrot/50'}`} placeholder={mode==='edit'? '(Dejar vacío para no cambiar)':'••••••'} />
