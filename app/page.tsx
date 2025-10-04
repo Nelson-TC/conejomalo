@@ -47,7 +47,7 @@ export default async function HomePage() {
   return (
     <main className="space-y-28">
       {/* HERO (New Transparent Layered Design) */}
-      <section aria-labelledby="hero-heading" className="relative px-6 pb-6 -mx-4 overflow-hidden md:m-0 rounded-xl">
+      <section aria-labelledby="hero-heading" className="relative px-6 pb-6 overflow-hidden md:m-0 rounded-xl">
         {/* Background layers */}
         <div aria-hidden="true" className="absolute inset-0 pointer-events-none -z-10">
           {/* Soft dual radial gradients */}

@@ -33,7 +33,7 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
 	]);
 
 	return (
-		<div className="space-y-8 px-3 sm:px-4 lg:px-0 max-w-[1600px] mx-auto overflow-x-hidden">
+		<div className="px-0 space-y-8 overflow-x-hidden lg:px-0">
 			<header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
 				<div className="space-y-1">
 					<h1 className="text-3xl font-bold tracking-tight">Panel de control</h1>

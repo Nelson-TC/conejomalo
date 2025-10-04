@@ -25,7 +25,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <NavBar />
             </header>
             <ScrollToTop />
-            <main id="main-content" tabIndex={-1} className="outline-none w-full min-h-[36vh] max-w-6xl px-6 py-8 mx-auto">{children}</main>
+            <main id="main-content" tabIndex={-1} className="outline-none w-full min-h-[36vh] max-w-7xl px-2 py-8 mx-auto">{children}</main>
             <Footer />
           </CartProvider>
         </AuthProvider>
