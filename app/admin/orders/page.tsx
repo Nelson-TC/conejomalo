@@ -4,7 +4,7 @@ import { getCurrentUser } from '@/lib/auth-server';
 import { getUserPermissions } from '@/lib/permissions';
 import { formatCurrency } from '@/lib/format';
 
-interface SearchParams { page?: string; q?: string; }
+interface SearchParams { page?: string; q?: string; status?: string }
 
 export const dynamic = 'force-dynamic';
 
@@ -20,13 +20,20 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
 	const pageSize = 20; // TODO: permitir per-page configurable similar a otras secciones
 	const page = Math.max(parseInt(searchParams.page || '1', 10) || 1, 1);
 	const q = (searchParams.q || '').trim();
-	const where: any = q ? {
-		OR: [
-			{ id: { contains: q } },
-			{ customer: { contains: q, mode: 'insensitive' } },
-			{ email: { contains: q, mode: 'insensitive' } }
-		]
-	} : {};
+	// Filtro de estado (por defecto PENDING)
+	const rawStatus = (searchParams.status || 'PENDING').toUpperCase();
+	const allowedStatuses = ['PENDING','PAID','SHIPPED','COMPLETED','CANCELED'] as const;
+	const status = allowedStatuses.includes(rawStatus as any) ? rawStatus : 'PENDING';
+	const where: any = {
+		...(q ? {
+			OR: [
+				{ id: { contains: q } },
+				{ customer: { contains: q, mode: 'insensitive' } },
+				{ email: { contains: q, mode: 'insensitive' } }
+			]
+		} : {}),
+		status
+	};
 
 	const [totalCount, orders] = await Promise.all([
 		prisma.order.count({ where }),
@@ -49,27 +56,47 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
 
 	const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
+	const statusLabels: Record<string,string> = {
+		PENDING: 'Pendiente',
+		PAID: 'Pagado',
+		SHIPPED: 'Enviado',
+		COMPLETED: 'Completado',
+		CANCELED: 'Cancelado'
+	};
+
 	return (
 		<div className="space-y-8">
 			<header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 				<div className="space-y-1">
 					<h1 className="text-2xl font-bold tracking-tight">Pedidos</h1>
-					<p className="text-sm text-neutral-600">Historial y búsqueda de pedidos.</p>
+					<p className="text-sm text-neutral-600">Historial y búsqueda de pedidos por estado.</p>
 				</div>
 				<form className="flex flex-col gap-2 sm:flex-row sm:items-center" role="search" aria-label="Buscar pedidos">
-					<input
-						name="q"
-						defaultValue={q}
-						placeholder="Buscar id, cliente o email..."
-						className="w-full px-3 py-2 text-sm bg-white border rounded-md sm:w-72 border-neutral-300 focus:outline-none focus:ring-2 focus:ring-carrot/50"
-					/>
+					<div className="flex w-full gap-2">
+						<input
+							name="q"
+							defaultValue={q}
+							placeholder="Buscar id, cliente o email..."
+							className="w-full px-3 py-2 text-sm bg-white border rounded-md sm:w-72 border-neutral-300 focus:outline-none focus:ring-2 focus:ring-carrot/50"
+						/>
+						<select
+							name="status"
+							defaultValue={status}
+							className="px-3 py-2 text-sm bg-white border rounded-md border-neutral-300 focus:outline-none focus:ring-2 focus:ring-carrot/50"
+							aria-label="Filtrar por estado"
+						>
+							{allowedStatuses.map(s => (
+								<option key={s} value={s}>{statusLabels[s]}</option>
+							))}
+						</select>
+					</div>
 					<div className="flex gap-2">
-						<button className="px-4 py-2 text-sm font-semibold rounded-md bg-carrot text-nav hover:bg-carrot-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nav">Buscar</button>
-						{q && (
+						<button className="px-4 py-2 text-sm font-semibold rounded-md bg-carrot text-nav hover:bg-carrot-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nav">Aplicar</button>
+						{(q || status !== 'PENDING') && (
 							<Link
 								href="/admin/orders"
 								className="px-4 py-2 text-sm font-medium transition border rounded-md bg-white/70 border-neutral-300 text-neutral-700 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-carrot/50"
-								aria-label="Limpiar búsqueda"
+								aria-label="Limpiar filtros"
 							>
 								Limpiar
 							</Link>
@@ -78,7 +105,7 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
 				</form>
 			</header>
 
-			<div className="text-xs text-neutral-500">Mostrando página {page} de {totalPages}{q && <> — filtro: "{q}"</>}.</div>
+			<div className="text-xs text-neutral-500">Mostrando página {page} de {totalPages} — estado: {statusLabels[status]}{q && <> — búsqueda: "{q}"</>}.</div>
 
 			{orders.length === 0 && (
 				<p className="text-sm text-neutral-600">No hay pedidos {q && <>para la búsqueda "{q}"</>}.</p>
@@ -154,6 +181,7 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
 						const active = p === page;
 						const params = new URLSearchParams();
 						if (q) params.set('q', q);
+						if (status !== 'PENDING') params.set('status', status);
 						if (p !== 1) params.set('page', String(p));
 						const href = params.toString() ? `?${params.toString()}` : '';
 						return (
