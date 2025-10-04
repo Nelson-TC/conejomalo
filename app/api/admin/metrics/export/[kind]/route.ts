@@ -6,7 +6,8 @@ export const runtime = 'nodejs';
 
 export async function GET(req: Request, { params }: { params: { kind: string } }) {
   try {
-    await requirePermission('dashboard:access');
+  // Export requiere permiso separado para diferenciar de visualización en dashboard
+  await requirePermission('dashboard:export');
     const { searchParams } = new URL(req.url);
     const format = (searchParams.get('format') || 'csv').toLowerCase();
     const range = normalizeRange({ from: searchParams.get('from') || undefined, to: searchParams.get('to') || undefined, g: searchParams.get('g') || undefined });

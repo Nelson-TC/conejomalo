@@ -19,16 +19,25 @@ export function CategoryDistribution({ data, compact = false }: { data: CatData[
     if (!targetRef.current) return;
     function recalc() {
       if (!targetRef.current) return;
-      const { width } = targetRef.current.getBoundingClientRect();
+      const { width, height } = targetRef.current.getBoundingClientRect();
+      // Compact (thumbnail donut)
       if (compact && !expanded) {
-        const outer = Math.max(46, Math.min(80, Math.floor(width/2.2)));
+        const basis = Math.min(width, height || width);
+        const outer = Math.max(46, Math.min(80, Math.floor(basis/2.2)));
         const inner = Math.max(outer - 36, 28);
         setRadius({ inner, outer });
         return;
       }
-      const maxOuter = expanded ? Math.min(220, Math.floor(width/2 - 20)) : Math.min(120, Math.floor(width/2 - 12));
-      const outer = Math.max(expanded ? 120 : 60, width < 320 ? Math.min(maxOuter, Math.floor(width/2.4)) : maxOuter);
-      const inner = Math.max(outer - (expanded? 72:48), expanded? 60:32);
+      // Expanded or normal mode
+      const baseLimit = expanded ? 220 : 120; // aesthetic cap
+      const constraint = Math.min(width, height || width);
+      let outer = Math.min(baseLimit, Math.floor(constraint/2) - (expanded? 10:8));
+      outer = Math.max(expanded ? 110 : 60, outer);
+      if (outer*2 > constraint) outer = Math.floor(constraint/2) - 10;
+      const ring = expanded ? 72 : 48; // ring thickness baseline
+      let inner = outer - ring;
+      const minInner = expanded ? 60 : 32;
+      if (inner < minInner) inner = Math.max(minInner, Math.floor(outer*0.55));
       setRadius({ inner, outer });
     }
     recalc();
@@ -86,8 +95,12 @@ export function CategoryDistribution({ data, compact = false }: { data: CatData[
       )}
 
       {compact && expanded && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-sm">
-          <div className="relative w-full max-w-xl p-5 space-y-4 bg-white border rounded-lg shadow-xl">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-sm"
+          role="dialog" aria-modal="true"
+          onMouseDown={(e)=> { if (e.target === e.currentTarget) setExpanded(false); }}
+        >
+          <div className="relative w-full max-w-xl p-5 space-y-4 bg-white border rounded-lg shadow-xl" role="document">
             <button
               onClick={()=> setExpanded(false)}
               className="absolute top-2 right-2 text-[11px] px-2 py-1 rounded bg-neutral-100 border hover:bg-neutral-200"
@@ -113,7 +126,7 @@ export function CategoryDistribution({ data, compact = false }: { data: CatData[
                 </li>
               ))}
             </ul>
-            <p className="text-[10px] text-neutral-400">Pulsa ESC o Cerrar para volver.</p>
+            <p className="text-[10px] text-neutral-400">Pulsa ESC, clic fuera o Cerrar para volver.</p>
           </div>
         </div>
       )}

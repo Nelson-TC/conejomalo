@@ -29,14 +29,12 @@ export async function PATCH(req: Request, { params }: Params) {
     const nextStatusRaw = String(body.status || '').toUpperCase();
     const allowed = ['PENDING','PAID','SHIPPED','COMPLETED','CANCELED'];
     if (!allowed.includes(nextStatusRaw)) return err(400,'INVALID_STATUS');
-    // Fetch current status via raw SQL to avoid missing type in generated client
-    const current: any[] = await (prisma as any).$queryRawUnsafe('SELECT id, status FROM "Order" WHERE id = $1', params.id);
-    if (!current.length) return err(404,'NOT_FOUND');
-    const prev = current[0].status;
-    if (prev === nextStatusRaw) return NextResponse.json({ ok: true, unchanged: true });
-    await (prisma as any).$executeRawUnsafe('UPDATE "Order" SET status = $1 WHERE id = $2', nextStatusRaw, params.id);
-    logAudit('order.status.update','Order', params.id, { from: prev, to: nextStatusRaw });
-    return NextResponse.json({ ok: true, from: prev, to: nextStatusRaw });
+    const existing = await prisma.order.findUnique({ where: { id: params.id }, select: { status: true } });
+    if (!existing) return err(404,'NOT_FOUND');
+    if (existing.status === nextStatusRaw) return NextResponse.json({ ok: true, unchanged: true });
+    const updated = await prisma.order.update({ where: { id: params.id }, data: { status: nextStatusRaw as any }, select: { status: true } });
+    logAudit('order.status.update','Order', params.id, { from: existing.status, to: updated.status });
+    return NextResponse.json({ ok: true, from: existing.status, to: updated.status });
   } catch (e:any) {
     if (e instanceof Error) {
       if (e.message === 'UNAUTHENTICATED') return err(401,'UNAUTHENTICATED');

@@ -1,8 +1,18 @@
 import '../../globals.css';
 import { AdminSidebar } from '../../components/AdminSidebar';
 import Link from 'next/link';
+import { getCurrentUser } from '@/lib/auth-server';
+import { getUserPermissions } from '@/lib/permissions';
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export const dynamic = 'force-dynamic';
+
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+	const user = await getCurrentUser();
+	if (!user) return <p className="p-6 text-sm text-red-600">No autenticado.</p>;
+	const perms = await getUserPermissions(user.id);
+	if (!(perms.has('admin:access') || perms.has('dashboard:access'))) {
+		return <p className="p-6 text-sm text-red-600">No autorizado.</p>;
+	}
 	return (
 		<div className="flex min-h-screen bg-neutral-100">
 			<div className="flex flex-col flex-1 min-w-0 md:pl-64">

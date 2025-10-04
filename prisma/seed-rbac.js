@@ -8,6 +8,7 @@ const prisma = new PrismaClient();
 const PERMISSIONS = [
   'admin:access',
   'dashboard:access',
+  'dashboard:export',
   'product:read','product:create','product:update','product:delete',
   'category:read','category:create','category:update','category:delete',
   'order:read','order:manageStatus',

@@ -1,5 +1,3 @@
-import { getCurrentUser } from '@/lib/auth-server';
-import { getUserPermissions } from '@/lib/permissions';
 import { normalizeRange, getSummaryMetrics, getTimeSeries, getTopProducts, getCategoryDistribution, getOrderStatusBreakdown, previousRange, getRecentOrders, getOrderStatusTotals, getUserSeries } from '@/lib/metrics';
 import { formatCurrency } from '@/lib/format';
 import { DashboardFilters } from '../../components/dashboard/DashboardFilters';
@@ -13,10 +11,6 @@ import { Suspense } from 'react';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminDashboardPage({ searchParams }: { searchParams: Record<string,string|undefined> }) {
-	const user = await getCurrentUser();
-	if (!user) return <p className="text-sm text-red-600">No autenticado.</p>;
-	const perms = await getUserPermissions(user.id);
-	if (!(perms.has('admin:access') || perms.has('dashboard:access'))) return <p className="text-sm text-red-600">No autorizado.</p>;
 
 	const range = normalizeRange({ from: searchParams.from, to: searchParams.to, g: searchParams.g });
 	const prev = previousRange(range);
@@ -159,27 +153,93 @@ function UpdateCard({ summary, prev }: { summary: any; prev: any }) {
 }
 
 function RecentOrdersList({ orders }: { orders: any[] }) {
+	const counts = orders.reduce((acc:any,o:any)=> { acc.total++; acc[o.status]=(acc[o.status]||0)+1; return acc; }, { total:0 });
 	return (
 		<div className="flex flex-col min-w-0 gap-3 p-4 border rounded-lg shadow-sm bg-white/90">
-			<div className="flex items-center justify-between">
-				<p className="text-[11px] uppercase tracking-wide text-neutral-500 font-semibold">Pedidos recientes</p>
-				<Link href="/admin/orders" className="text-[11px] text-carrot hover:underline">Ver todos</Link>
+			<div className="flex items-start justify-between gap-3">
+				<div className="flex flex-col">
+					<p className="text-[11px] uppercase tracking-wide text-neutral-500 font-semibold">Pedidos recientes</p>
+					{counts.total>0 && (
+						<p className="flex flex-wrap gap-2 mt-1 text-[10px] text-neutral-500">
+							<span><strong className="text-neutral-700">{counts.total}</strong> totales</span>
+							{['COMPLETED','PAID','PENDING','CANCELED'].map(s=> counts[s] ? (
+								<span key={s} className="flex items-center gap-1"><span className={`w-2 h-2 rounded-full ${statusDotColor(s)}`} />{s.toLowerCase()}: {counts[s]}</span>
+							): null)}
+						</p>
+					)}
+				</div>
+				<Link href="/admin/orders" className="self-start text-[11px] text-carrot hover:underline whitespace-nowrap">Ver todos</Link>
 			</div>
 			{orders.length === 0 && <p className="text-xs text-neutral-500">Sin pedidos en el rango.</p>}
-			<ul className="text-xs divide-y">
-				{orders.map(o => (
-					<li key={o.id} className="flex items-center gap-2 py-2">
-						<span className={`px-2 py-0.5 rounded text-[10px] font-medium ${badgeColor(o.status)}`}>{o.status}</span>
-						<span className="flex-1 font-mono text-[11px] truncate md:basis-24 md:flex-none">{o.id.slice(0,8)}</span>
-						{/* Columnas ocultas en pantallas pequeñas para evitar corte */}
-						<span className="hidden truncate md:inline-block text-neutral-500 w-36 lg:w-44">{o.userEmail || '—'}</span>
-						<span className="hidden text-right md:block tabular-nums w-14">{o.items}</span>
-						<span className="w-16 font-medium text-right md:w-20 tabular-nums">{formatCurrency(o.total)}</span>
-					</li>
-				))}
+			<ul className="flex flex-col divide-y">
+				{orders.map(o => {
+					const age = relativeTime(o.createdAt);
+					return (
+						<li key={o.id}>
+							<Link href={`/admin/orders/${o.id}`} className="flex flex-col gap-1 py-2 group focus:outline-none focus-visible:ring-2 focus-visible:ring-carrot/50">
+								<div className="flex items-center gap-2">
+									<span className={`w-1.5 h-6 rounded-full ${statusBarColor(o.status)} group-hover:opacity-80`} aria-hidden />
+									<span className="font-mono text-[11px] text-neutral-600 group-hover:text-neutral-900 tracking-tight">{o.id.slice(0,8)}</span>
+									<span className="ml-auto text-sm font-medium transition-colors tabular-nums text-neutral-900 group-hover:text-carrot-dark">{formatCurrency(o.total)}</span>
+								</div>
+								<div className="flex items-center gap-2 pl-4 text-[10px] text-neutral-500">
+									<span className={`px-1.5 py-0.5 rounded-md border ${badgeTone(o.status)}`}>{o.status}</span>
+									<span className="tracking-wide uppercase text-neutral-400">{o.items} ítem{o.items===1?'':'s'}</span>
+									{age && <span className="ml-auto font-mono text-[10px] text-neutral-400">{age}</span>}
+								</div>
+							</Link>
+						</li>
+					);
+				})}
 			</ul>
 		</div>
 	);
+}
+
+function relativeTime(raw: any) {
+	try {
+		if (!raw) return '';
+		const d = new Date(raw);
+		if (isNaN(d.getTime())) return '';
+		const now = Date.now();
+		const diff = Math.floor((now - d.getTime())/1000); // seconds
+		if (diff < 60) return diff + 's';
+		if (diff < 3600) return Math.floor(diff/60)+'m';
+		if (diff < 86400) return Math.floor(diff/3600)+'h';
+		const days = Math.floor(diff/86400);
+		return days + 'd';
+	} catch { return ''; }
+}
+
+function statusDotColor(s: string) {
+	switch(s) {
+		case 'COMPLETED': return 'bg-emerald-500';
+		case 'PAID': return 'bg-blue-500';
+		case 'SHIPPED': return 'bg-amber-500';
+		case 'PENDING': return 'bg-neutral-400';
+		case 'CANCELED': return 'bg-red-500';
+		default: return 'bg-neutral-300';
+	}
+}
+function statusBarColor(s: string) {
+	switch(s) {
+		case 'COMPLETED': return 'bg-emerald-400';
+		case 'PAID': return 'bg-blue-400';
+		case 'SHIPPED': return 'bg-amber-400';
+		case 'PENDING': return 'bg-neutral-300';
+		case 'CANCELED': return 'bg-red-400';
+		default: return 'bg-neutral-300';
+	}
+}
+function badgeTone(s: string) {
+	switch(s) {
+		case 'COMPLETED': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+		case 'PAID': return 'bg-blue-50 text-blue-700 border-blue-200';
+		case 'SHIPPED': return 'bg-amber-50 text-amber-700 border-amber-200';
+		case 'PENDING': return 'bg-neutral-50 text-neutral-600 border-neutral-200';
+		case 'CANCELED': return 'bg-red-50 text-red-600 border-red-200';
+		default: return 'bg-neutral-50 text-neutral-600 border-neutral-200';
+	}
 }
 
 function badgeColor(status: string) {

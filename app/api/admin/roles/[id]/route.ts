@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../../../src/lib/prisma';
-import { requirePermission } from '../../../../../src/lib/permissions';
+import { requirePermission, invalidatePermissions } from '../../../../../src/lib/permissions';
 import { logAudit } from '../../../../../src/lib/audit';
 
 export const runtime = 'nodejs';
@@ -56,7 +56,9 @@ export async function PUT(req: Request, { params }: Params) {
         }
       }
     }
-    logAudit('role.update','Role', updated.id, { permissions });
+  logAudit('role.update','Role', updated.id, { permissions });
+  // Invalida cache de permisos para todos (simplificación)
+  invalidatePermissions();
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     if (e instanceof Error) {
@@ -75,7 +77,8 @@ export async function DELETE(_: Request, { params }: Params) {
     await prisma.rolePermission.deleteMany({ where: { roleId: existing.id } });
     await prisma.userRole.deleteMany({ where: { roleId: existing.id } });
     await prisma.roleEntity.delete({ where: { id: existing.id } });
-    logAudit('role.delete','Role', params.id);
+  logAudit('role.delete','Role', params.id);
+  invalidatePermissions();
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     if (e instanceof Error) {
