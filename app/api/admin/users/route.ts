@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../../src/lib/prisma';
-import { requirePermission } from '../../../../src/lib/permissions';
+import { requirePermission, invalidatePermissions } from '../../../../src/lib/permissions';
 import { logAudit } from '../../../../src/lib/audit';
 
 function err(status: number, code: string, message?: string) { return NextResponse.json({ error: message || code, code }, { status }); }
@@ -36,6 +36,8 @@ export async function POST(req: Request) {
 				await prisma.userRole.createMany({ data: validRoles.map(r=>({ userId: created.id, roleId: r.id })) });
 			}
 		}
+		// Invalida caché de permisos del nuevo usuario (por si el mismo ya tenía sesión pre-creación en otro flujo OAuth, etc.)
+		invalidatePermissions(created.id);
 		logAudit('user.create','User', created.id, { email, roleIds });
 		return NextResponse.json(created, { status: 201 });
 	} catch (e: any) {

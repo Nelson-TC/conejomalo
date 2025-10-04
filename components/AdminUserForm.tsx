@@ -1,5 +1,6 @@
 "use client";
 import { useState, useTransition } from 'react';
+import { useAuth } from './AuthProvider';
 import { useRouter } from 'next/navigation';
 import { mapApiError } from '../src/lib/client-errors';
 import { usePermissions } from '../src/lib/use-permissions';
@@ -24,6 +25,7 @@ interface AdminUserFormProps {
 export default function AdminUserForm({ initial, mode='create', roles = [], initialRoleIds = [] }: AdminUserFormProps) {
 	const router = useRouter();
 	const [isPending, startTransition] = useTransition();
+	const { session, refresh } = useAuth();
 	const [values, setValues] = useState<UserFormValues>({
     id: initial?.id,
     email: initial?.email || '',
@@ -73,6 +75,11 @@ export default function AdminUserForm({ initial, mode='create', roles = [], init
 					throw new Error(mapApiError(data));
 				}
 				setServerSuccess(values.id? 'Usuario actualizado':'Usuario creado');
+				// Si el usuario editado es el mismo que la sesión, forzar refresco de permisos para reflejar roles nuevos
+				if (values.id && session?.sub === values.id) {
+					if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('auth:changed'));
+					await refresh();
+				}
 				setTimeout(()=>{ router.push('/admin/users'); router.refresh(); }, 700);
 			} catch(err:any) { setServerError(err.message || 'Error'); }
 		});

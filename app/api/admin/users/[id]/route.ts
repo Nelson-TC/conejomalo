@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../../../src/lib/prisma';
-import { requirePermission } from '../../../../../src/lib/permissions';
+import { requirePermission, invalidatePermissions } from '../../../../../src/lib/permissions';
 import { logAudit } from '../../../../../src/lib/audit';
 
 interface Params { params: { id: string } }
@@ -35,6 +35,8 @@ export async function PUT(req: Request, { params }: Params) {
 				await prisma.userRole.createMany({ data: validRoles.map(r=>({ userId: user.id, roleId: r.id })) });
 			}
 		}
+		// Invalidar caché de permisos para que próximos fetch /api/auth/me reflejen roles
+		invalidatePermissions(user.id);
 		logAudit('user.update','User', user.id, { name, roleIds });
 		return NextResponse.json(user);
 	} catch (e: any) {

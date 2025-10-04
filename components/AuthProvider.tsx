@@ -1,7 +1,7 @@
 "use client";
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
-type Session = { sub: string; email: string; role: 'USER' | 'ADMIN' } | null;
+type Session = { sub: string; email: string; role: 'USER' | 'ADMIN'; permissions: string[] } | null;
 
 interface AuthContextValue {
 	session: Session;
@@ -22,7 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			if (!res.ok) { setSession(null); return; }
 			const data = await res.json();
 			if (data && data.authenticated) {
-				setSession({ sub: data.sub, email: data.email, role: (data.role || 'USER') });
+				setSession({ sub: data.sub, email: data.email, role: (data.role || 'USER'), permissions: Array.isArray(data.permissions)? data.permissions: [] });
 			} else {
 				setSession(null);
 			}

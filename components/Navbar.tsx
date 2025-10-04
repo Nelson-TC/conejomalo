@@ -19,11 +19,11 @@ const links: NavLink[] = [
 ];
 
 export function NavBar() {
-  const { session } = useAuth();
+  const { session, loading } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
   const [q, setQ] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [results, setResults] = useState<any[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -54,8 +54,8 @@ export function NavBar() {
   const timer = useRef<any>();
 
   useEffect(()=>{
-    if (!q || q.length < 2) { setResults([]); setLoading(false); return; }
-    setLoading(true);
+  if (!q || q.length < 2) { setResults([]); setSearchLoading(false); return; }
+  setSearchLoading(true);
     clearTimeout(timer.current);
     timer.current = setTimeout(async () => {
       try {
@@ -63,7 +63,7 @@ export function NavBar() {
         const data = await res.json();
         setResults(data.items || []);
       } catch { setResults([]); }
-      finally { setLoading(false); }
+  finally { setSearchLoading(false); }
     }, 250);
   }, [q]);
 
@@ -128,7 +128,8 @@ export function NavBar() {
   }
 
   const navLinks = links.filter(l => {
-    if (l.admin && session?.role !== 'ADMIN') return false;
+    const perms = session?.permissions || [];
+    if (l.admin && !(perms.includes('admin:access') || perms.includes('dashboard:access'))) return false;
     if (l.auth && !session) return false;
     if (!l.auth && (l.href === '/login' || l.href === '/register') && session) return false;
     return true;
@@ -210,7 +211,12 @@ export function NavBar() {
                 <p className="text-[11px] uppercase tracking-wide text-white/40 mb-2">Accesos rápidos</p>
                 <div className="flex flex-wrap gap-2">
                   <Link href="/cart" className="text-[11px] px-2 py-1 rounded bg-white/10 hover:bg-white/20 transition">Carrito ({cartCount})</Link>
-                  {session.role === 'ADMIN' && <Link href="/admin" className="text-[11px] px-2 py-1 rounded bg-carrot text-nav font-semibold hover:bg-carrot-dark transition">Admin</Link>}
+                  {loading && (
+                    <span className="text-[11px] px-2 py-1 rounded bg-white/10 animate-pulse text-transparent select-none">Admin</span>
+                  )}
+                  {!loading && session && (session.permissions.includes('admin:access') || session.permissions.includes('dashboard:access')) && (
+                    <Link href="/admin" className="text-[11px] px-2 py-1 rounded bg-carrot text-nav font-semibold hover:bg-carrot-dark transition">Admin</Link>
+                  )}
                 </div>
               </div>
             )}
@@ -240,13 +246,13 @@ export function NavBar() {
                 <span className="hidden sm:inline">Buscar</span>
               </button>
               <span className="absolute text-xs -translate-y-1/2 pointer-events-none text-neutral-400 right-24 top-1/2">
-                {loading ? (<i className="bx bx-dots-horizontal-rounded text-[1.5rem] animate-pulse" />) : null}
+                {searchLoading ? (<i className="bx bx-dots-horizontal-rounded text-[1.5rem] animate-pulse" />) : null}
               </span>
             </form>
             {showResults && (q.length === 0 || (q.length>=2)) && (
                 <div className="absolute left-0 z-50 w-full mt-2 overflow-hidden bg-white border shadow-lg rounded-xl text-neutral-700">
-                  {loading && <div className="px-4 py-3 text-xs text-neutral-500">Buscando...</div>}
-                  {!loading && results.length === 0 && q.length>=2 && (
+                  {searchLoading && <div className="px-4 py-3 text-xs text-neutral-500">Buscando...</div>}
+                  {!searchLoading && results.length === 0 && q.length>=2 && (
                     <div className="px-4 py-3 text-xs text-neutral-500">Sin resultados</div>
                   )}
                   <ul className="overflow-auto text-sm divide-y max-h-72" role="listbox" aria-label="Resultados de búsqueda">
@@ -270,7 +276,7 @@ export function NavBar() {
                       </li>
                     ))}
                   </ul>
-                  {q.length>=2 && !loading && results.length > 0 && (
+                  {q.length>=2 && !searchLoading && results.length > 0 && (
                     <div className="p-2 text-right bg-neutral-50">
                       <Link href={`/search?q=${encodeURIComponent(q)}`} onClick={()=>setShowResults(false)} className="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium transition rounded-md bg-carrot text-nav hover:bg-carrot-dark">
                         Ver todos ({results.length < 8 ? results.length : '…'})
@@ -311,7 +317,12 @@ export function NavBar() {
                   </span>
                 )}
               </Link>
-              {session.role === 'ADMIN' && <Link href="/admin" className="px-3 py-1.5 rounded hover:bg-white/15 transition text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-carrot/60">Admin</Link>}
+              {loading && (
+                <span className="px-3 py-1.5 rounded bg-white/10 animate-pulse text-transparent select-none">Admin</span>
+              )}
+              {!loading && session && (session.permissions.includes('admin:access') || session.permissions.includes('dashboard:access')) && (
+                <Link href="/admin" className="px-3 py-1.5 rounded hover:bg-white/15 transition text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-carrot/60">Admin</Link>
+              )}
             </div>
           )}
         </div>
