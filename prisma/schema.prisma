@@ -8,15 +8,17 @@ datasource db {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
+  id           String     @id @default(cuid())
+  email        String     @unique
   name         String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  passwordHash String    @default("")
-  role         Role      @default(USER)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  passwordHash String     @default("")
+  role         Role       @default(USER)
+  auditLogs    AuditLog[]
   orders       Order[]
   products     Product[]
+  userRoles    UserRole[]
 }
 
 model Category {
@@ -46,6 +48,51 @@ model Product {
   user        User?       @relation(fields: [userId], references: [id])
 }
 
+model Permission {
+  id          String           @id @default(cuid())
+  key         String           @unique
+  description String?
+  rolePerms   RolePermission[]
+}
+
+model RoleEntity {
+  id          String           @id @default(cuid())
+  name        String           @unique
+  label       String
+  description String?
+  rolePerms   RolePermission[]
+  userRoles   UserRole[]
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  role         RoleEntity @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+model UserRole {
+  userId String
+  roleId String
+  role   RoleEntity @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  entity    String?
+  entityId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
 model Order {
   id        String      @id @default(cuid())
   customer  String
@@ -56,6 +103,7 @@ model Order {
   createdAt DateTime    @default(now())
   phone     String
   userId    String?
+  status    OrderStatus @default(PENDING)
   user      User?       @relation(fields: [userId], references: [id])
   items     OrderItem[]
 }
@@ -75,4 +123,12 @@ model OrderItem {
 enum Role {
   USER
   ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  COMPLETED
+  CANCELED
 }

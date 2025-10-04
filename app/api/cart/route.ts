@@ -31,7 +31,7 @@ export async function GET() {
     return new Response(JSON.stringify({ items: [], subtotal: 0, enriched: [] }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   }
   // Fetch products
-  const products = await prisma.product.findMany({ where: { id: { in: cart.items.map(i => i.productId) } }, select: { id: true, name: true, price: true } });
+  const products = await prisma.product.findMany({ where: { id: { in: cart.items.map(i => i.productId) } }, select: { id: true, name: true, price: true, slug: true, imageUrl: true } });
   const map = new Map(products.map((p :any)=> [p.id, p]));
   const enriched = cart.items
     .filter(i => map.has(i.productId))
@@ -39,7 +39,7 @@ export async function GET() {
       const p: any = map.get(i.productId)!;
       const price = Number(p.price); // Decimal to number
       const lineTotal = price * i.qty;
-      return { ...i, name: p.name, price, lineTotal };
+  return { ...i, name: p.name, price, lineTotal, slug: p.slug, imageUrl: p.imageUrl };
     });
   const subtotal = enriched.reduce((s, i) => s + i.lineTotal, 0);
   return new Response(JSON.stringify({ items: cart.items, enriched, subtotal }), { status: 200, headers: { 'Content-Type': 'application/json' } });

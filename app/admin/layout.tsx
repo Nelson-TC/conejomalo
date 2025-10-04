@@ -1,23 +1,25 @@
-import Link from 'next/link';
 import '../../globals.css';
+import { AdminSidebar } from '../../components/AdminSidebar';
+import Link from 'next/link';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
 	return (
-		<div className="min-h-screen bg-neutral-100">
-			<header className="bg-white border-b">
-				<div className="flex items-center justify-between h-14 container-app">
-					<div className="flex items-center gap-6 text-sm font-medium">
-						<Link href="/" className="font-semibold">ConejoMalo</Link>
-						<Link href="/admin/categories" className="hover:text-brand">Categorías</Link>
-						<Link href="/admin/products" className="hover:text-brand">Productos</Link>
-						<Link href="/admin/orders" className="hover:text-brand">Pedidos</Link>
-						<Link href="/admin/users" className="hover:text-brand">Usuarios</Link>
+		<div className="flex min-h-screen bg-neutral-100">
+			<div className="flex flex-col flex-1 min-w-0 md:pl-64">
+				<header className="sticky top-0 z-30 flex items-center px-6 border-b h-14 bg-white/80 backdrop-blur">
+					<div className="flex items-center justify-between w-full">
+						<div className="flex items-center gap-3 text-sm">
+							<Link href="/" className="font-semibold text-nav">Conejo Malo</Link>
+							<span className="hidden text-[11px] px-2 py-0.5 rounded-full bg-carrot/50 text-black font-semibold md:inline-block">Admin</span>
+						</div>
+						<div className="flex items-center gap-2 text-[11px] text-neutral-500">
+							<span>Panel interno</span>
+						</div>
 					</div>
-				</div>
-			</header>
-			<main className="py-8 space-y-8 container-app">
-				{children}
-			</main>
+				</header>
+				<main className="w-full p-6 mx-auto space-y-10 max-w-7xl">{children}</main>
+			</div>
+			<AdminSidebar />
 		</div>
 	);
 }

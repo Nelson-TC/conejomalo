@@ -29,6 +29,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
 	useEffect(() => { load(); }, [load]);
 
+	// Escuchar eventos globales de actualización del carrito (ej: después de crear una orden)
+	useEffect(() => {
+		function handler() { load(); }
+		window.addEventListener('cart:updated', handler);
+		return () => window.removeEventListener('cart:updated', handler);
+	}, [load]);
+
 	const setQuantity = useCallback(async (productId: string, qty: number) => {
 		await fetch('/api/cart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productId, qty }) });
 		window.dispatchEvent(new CustomEvent('cart:updated'));

@@ -10,7 +10,8 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:generate": "prisma generate",
     "prisma:studio": "prisma studio",
-    "db:seed": "node prisma/seed.js"
+    "db:seed": "node prisma/seed.js",
+    "db:seed:rbac": "node prisma/seed-rbac.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
@@ -25,6 +26,7 @@
     "nextjs-toploader": "^3.9.17",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "recharts": "^2.12.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {

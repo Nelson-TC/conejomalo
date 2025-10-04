@@ -8,9 +8,9 @@ export async function POST(req: Request) {
     const email = String(body?.email || '').trim().toLowerCase();
     const password = String(body?.password || '');
     const user = await (prisma as any).user.findUnique({ where: { email } });
-    if (!user) return NextResponse.json({ error: 'Credenciales' }, { status: 401 });
+    if (!user) return NextResponse.json({ error: 'Credenciales incorrectas' }, { status: 401 });
     const ok = await verifyPassword(password, user.passwordHash);
-    if (!ok) return NextResponse.json({ error: 'Credenciales' }, { status: 401 });
+    if (!ok) return NextResponse.json({ error: 'Credenciales incorrectas' }, { status: 401 });
     await createSessionCookie({ sub: user.id, email: user.email, role: user.role });
     return NextResponse.json({ ok: true });
   } catch {

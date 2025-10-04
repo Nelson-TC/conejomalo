@@ -24,3 +24,14 @@ export async function getCurrentUser() {
 export function requireUser() {
   return getCurrentUser().then(u => { if (!u) throw new Error('UNAUTHENTICATED'); return u; });
 }
+
+/**
+ * Igual que requireUser pero además exige rol ADMIN.
+ * Lanza errores específicos para mapear a códigos HTTP.
+ */
+export async function requireAdmin() {
+  const user = await getCurrentUser();
+  if (!user) throw new Error('UNAUTHENTICATED');
+  if (user.role !== 'ADMIN') throw new Error('FORBIDDEN');
+  return user;
+}

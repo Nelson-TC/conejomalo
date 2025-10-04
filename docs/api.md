@@ -75,6 +75,14 @@ Crea usuario básico (sin password) - uso interno.
 ### `GET/PUT/DELETE /api/admin/users/:id`
 Obtener, actualizar `name`, borrar.
 
+## Dashboard / Métricas (Resumen)
+Los endpoints de exportación (CSV) reutilizan helpers de `metrics.ts` (actualmente expuestos vía `ExportMenu` usando rutas `/api/admin/...` o `/api/...` según se definan). Si se extienden, documentar:
+- `/api/admin/export/summary`
+- `/api/admin/export/timeseries`
+- `/api/admin/export/top-products`
+- `/api/admin/export/categories`
+- `/api/admin/export/orders-status`
+
 ## Códigos de Estado Comunes
 - 200 OK / 201 Created / 204 No Content
 - 400 Bad Request (validación)

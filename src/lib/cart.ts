@@ -71,5 +71,10 @@ export async function createOrder(data: CreateOrderInput) {
     throw err;
   }
   handleError(res, 'No se pudo crear orden');
-  return res.json();
+  const order = await res.json();
+  // El servidor limpia la cookie; aquí notificamos al cliente para refrescar cualquier UI dependiente
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('cart:updated'));
+  }
+  return order;
 }

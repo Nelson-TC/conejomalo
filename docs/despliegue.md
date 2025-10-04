@@ -91,3 +91,5 @@ services:
 - [ ] Logs verificados
 - [ ] Monitoreo / uptime configurado
 - [ ] Backups DB programados
+- [ ] Revisión de permisos / roles (`docs/rbac.md`)
+- [ ] Validación visual dashboard en breakpoints clave (414px, 768px, 1280px, 1536px)

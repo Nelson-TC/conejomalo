@@ -1,43 +1,72 @@
 import { notFound } from 'next/navigation';
 import { prisma } from '../../../src/lib/prisma';
 import { formatCurrency } from '../../../src/lib/format';
-import AddToCartButton from '../../../components/AddToCartButton';
 import Image from 'next/image';
+import Link from 'next/link';
+import ProductPurchasePanel from '../../../components/ProductPurchasePanel';
 
 interface Props { params: { slug: string } }
 
 export default async function ProductDetailPage({ params }: Props) {
-	const product = await prisma.product.findUnique({ where: { slug: params.slug } });
+	const product = await prisma.product.findUnique({ where: { slug: params.slug }, include: { category: true } });
 	if (!product) return notFound();
 
 	const priceNumber = Number(product.price);
 
 	return (
-		<div className="max-w-5xl p-6 mx-auto md:py-10">
-			<div className="grid gap-10 md:grid-cols-2">
-				<div>
-					<div className="relative overflow-hidden border rounded-xl bg-neutral-50 aspect-square border-neutral-200">
+		<div className="max-w-6xl px-5 mx-auto">
+			{/* Breadcrumbs */}
+			<nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1 mb-6 text-xs text-neutral-500">
+				<Link href="/" className="transition hover:text-neutral-700">Inicio</Link>
+				<span>/</span>
+				<Link href="/products" className="transition hover:text-neutral-700">Productos</Link>
+				{product.category && (<>
+					<span>/</span>
+					<Link href={`/categories/${product.category.slug}`} className="transition hover:text-neutral-700">{product.category.name}</Link>
+				</>)}
+				<span>/</span>
+				<span className="text-neutral-700 font-medium line-clamp-1 max-w-[240px] md:max-w-none">{product.name}</span>
+			</nav>
+
+			<div className="grid gap-12 md:grid-cols-2">
+				{/* Image / Media */}
+				<div className="space-y-4">
+					<div className="relative overflow-hidden border shadow-sm aspect-square rounded-2xl bg-neutral-50 border-neutral-200">
 						{product.imageUrl ? (
-							/* eslint-disable @next/next/no-img-element */
-							<img
+							<Image
 								src={product.imageUrl}
 								alt={product.name}
-								className="object-cover w-full h-full"
+								fill
+								priority={false}
+								className="object-cover"
 							/>
 						) : (
 							<div className="flex items-center justify-center w-full h-full text-xs tracking-wider select-none text-neutral-400">SIN IMAGEN</div>
 						)}
+						{product.category && (
+							<span className="absolute top-3 left-3 inline-flex items-center gap-1 rounded-full bg-white/90 backdrop-blur px-3 py-1 text-[11px] font-medium text-neutral-700 ring-1 ring-black/5">
+								<i className='text-sm bx bxs-tag-alt text-carrot' /> {product.category.name}
+							</span>
+						)}
 					</div>
+					{/* Potential future thumbnails area - left as placeholder */}
 				</div>
-				<div className="space-y-6">
-					<div className="space-y-3">
-						<h1 className="text-3xl font-bold tracking-tight md:text-4xl">{product.name}</h1>
-						{product.description && <p className="text-sm leading-relaxed whitespace-pre-line text-neutral-700">{product.description}</p>}
-					</div>
-					<div className="flex items-center gap-6">
-						<div className="text-2xl font-semibold text-brand">{formatCurrency(priceNumber)}</div>
-						<AddToCartButton productId={product.id} />
-					</div>
+				{/* Info / Purchase */}
+				<div className="flex flex-col gap-10">
+					<header className="space-y-5">
+						<h1 className="text-3xl font-bold leading-tight tracking-tight md:text-4xl text-neutral-900">{product.name}</h1>
+						{product.description && (
+							<p className="text-sm leading-relaxed whitespace-pre-line text-neutral-700 max-w-prose">{product.description}</p>
+						)}
+					</header>
+					<ProductPurchasePanel productId={product.id} productName={product.name} priceFormatted={formatCurrency(priceNumber)} />
+					<section aria-label="Detalles" className="space-y-3">
+						<h2 className="text-sm font-semibold tracking-wide text-neutral-800">Información</h2>
+						<ul className="text-[12px] text-neutral-600 space-y-1">
+							{product.category && <li><strong className="font-medium text-neutral-700">Categoría:</strong> {product.category.name}</li>}
+							<li><strong className="font-medium text-neutral-700">Estado:</strong> {product.active ? 'Disponible' : 'No disponible'}</li>
+						</ul>
+					</section>
 				</div>
 			</div>
 		</div>
