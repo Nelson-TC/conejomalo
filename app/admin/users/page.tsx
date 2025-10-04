@@ -42,7 +42,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: S
 				</div>
 				{canCreate && <Link href="/admin/users/new" className="px-4 py-2 text-sm font-semibold rounded bg-carrot text-nav hover:bg-carrot-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nav">Nuevo</Link>}
 			</header>
-			<div className="overflow-hidden border rounded-lg bg-surface shadow-sm">
+			<div className="overflow-auto border rounded-lg shadow-sm bg-surface">
 				<table className="w-full text-sm text-left align-middle">
 					<thead className="text-[11px] uppercase tracking-wide bg-neutral-50 text-neutral-500">
 						<tr>
@@ -57,8 +57,8 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: S
 							<tr key={u.id} className="hover:bg-neutral-50">
 								<td className="px-3 py-2 font-medium text-neutral-800 max-w-[240px] truncate" title={u.email}>{u.email}</td>
 								<td className="px-3 py-2 text-neutral-600">{u.name}</td>
-								<td className="px-3 py-2 text-neutral-600 text-xs whitespace-nowrap">{new Date(u.createdAt).toLocaleDateString()}</td>
-								<td className="px-3 py-2 text-right">{canUpdate && <Link href={`/admin/users/${u.id}`} className="text-carrot hover:underline font-medium text-xs">Editar</Link>}</td>
+								<td className="px-3 py-2 text-xs text-neutral-600 whitespace-nowrap">{new Date(u.createdAt).toLocaleDateString()}</td>
+								<td className="px-3 py-2 text-right">{canUpdate && <Link href={`/admin/users/${u.id}`} className="text-xs font-medium text-carrot hover:underline">Editar</Link>}</td>
 							</tr>
 						))}
 						{users.length === 0 && (

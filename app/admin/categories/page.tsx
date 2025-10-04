@@ -46,7 +46,7 @@ export default async function AdminCategoriesPage({ searchParams }: { searchPara
 					{canCreate && <Link href="/admin/categories/new" className="px-4 py-2 text-sm font-semibold rounded bg-carrot text-nav hover:bg-carrot-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nav">Nueva</Link>}
 				</div>
 			</header>
-			<div className="overflow-hidden border rounded-lg bg-surface shadow-sm">
+			<div className="overflow-auto border rounded-lg shadow-sm bg-surface">
 				<table className="w-full text-sm text-left align-middle">
 					<thead className="text-[11px] uppercase tracking-wide bg-neutral-50 text-neutral-500">
 						<tr>
@@ -61,9 +61,9 @@ export default async function AdminCategoriesPage({ searchParams }: { searchPara
 							<tr key={c.id} className="hover:bg-neutral-50">
 								<td className="px-3 py-2 font-medium text-neutral-800">{c.name}</td>
 								<td className="px-3 py-2"><span className={`px-2 py-0.5 text-[11px] rounded-full font-medium ${c.active? 'bg-green-100 text-green-700':'bg-neutral-200 text-neutral-600'}`}>{c.active? 'Sí':'No'}</span></td>
-								<td className="px-3 py-2 text-neutral-600 text-xs whitespace-nowrap">{new Date(c.createdAt).toLocaleDateString()}</td>
+								<td className="px-3 py-2 text-xs text-neutral-600 whitespace-nowrap">{new Date(c.createdAt).toLocaleDateString()}</td>
 								<td className="px-3 py-2 text-right">
-									{canUpdate && <Link href={`/admin/categories/${c.id}`} className="text-carrot hover:underline font-medium text-xs">Editar</Link>}
+									{canUpdate && <Link href={`/admin/categories/${c.id}`} className="text-xs font-medium text-carrot hover:underline">Editar</Link>}
 								</td>
 							</tr>
 						))}
