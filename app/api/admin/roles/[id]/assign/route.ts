@@ -15,9 +15,15 @@ export async function POST(req: Request, { params }: Params) {
   try {
     await requirePermission('role:update');
     const body = await req.json();
-    const userId = String(body.userId||'');
+    let userId = String(body.userId||'');
+    const email = typeof body.email === 'string' ? body.email.trim() : '';
+    if (!userId && email) {
+      const u = await prisma.user.findUnique({ where: { email } });
+      if (!u) return err(404,'USER_NOT_FOUND');
+      userId = u.id;
+    }
     if (!userId) return err(400,'USER_REQUIRED');
-    const role = await prisma.roleEntity.findUnique({ where: { id: params.id } });
+    const role = await prisma.roleEntity.findFirst({ where: { OR: [ { id: params.id }, { name: params.id } ] } });
     if (!role) return err(404,'NOT_FOUND');
     await prisma.userRole.upsert({
       where: { userId_roleId: { userId, roleId: role.id } },

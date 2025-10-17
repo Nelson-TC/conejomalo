@@ -128,7 +128,7 @@ export default async function HomePage() {
           {categories.length === 0 && (
             <div className="text-sm text-neutral-500">Aún no hay categorías activas.</div>
           )}
-          <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4">
             {categories.map(c => {
               const img = c.imageUrl || categoryImageFallback[c.slug] || '/images/noimage.webp';
               return (
@@ -157,8 +157,8 @@ export default async function HomePage() {
           {products.length === 0 && (
             <div className="text-sm text-neutral-500">No hay productos disponibles todavía.</div>
           )}
-          <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
-            {products.map((p: any) => <ProductCard key={p.id} product={p} />)}
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:gap-5">
+            {products.map((p: any) => <ProductCard key={p.id} product={p} variant="compact" />)}
           </div>
         </div>
       </section>

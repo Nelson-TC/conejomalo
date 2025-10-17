@@ -25,7 +25,8 @@ export async function GET() {
       label: r.label,
       description: r.description,
       permissions: r.rolePerms.map(rp => rp.permission.key),
-      users: r.userRoles.length
+      users: r.userRoles.length,
+      usersCount: r.userRoles.length
     })));
   } catch (e: any) {
     if (e instanceof Error) {

@@ -28,6 +28,7 @@ export default function ProductCard({ product, showDescription = true, variant='
 
   const price = formatCurrency(Number(product.price));
   const image = product.imageUrl || '/images/noimage.webp';
+  const compact = variant === 'compact';
 
   function handleNavigate() {
     router.push(`/products/${product.slug}`);
@@ -54,33 +55,33 @@ export default function ProductCard({ product, showDescription = true, variant='
       tabIndex={0}
       onClick={handleNavigate}
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleNavigate(); } }}
-      className={`relative flex flex-col h-full transition bg-white border shadow-sm cursor-pointer group rounded-xl border-neutral-200 hover:shadow-md hover:border-neutral-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-carrot/60 ${variant==='compact'? 'min-h-[300px]':''}`}
+      className={`relative flex flex-col h-full transition bg-white border shadow-sm cursor-pointer group rounded-xl border-neutral-200 hover:shadow-md hover:border-neutral-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-carrot/60`}
       aria-label={product.name}
     >
-      <div className="relative w-full aspect-square bg-neutral-100">
+      <div className={`relative w-full ${compact ? 'aspect-[4/3]' : 'aspect-square'} bg-neutral-100`}>
         <Image
           src={image}
           alt={product.name}
           fill
-          sizes="(max-width:768px) 50vw, (max-width:1200px) 33vw, 300px"
+          sizes={compact ? "(max-width:768px) 50vw, (max-width:1200px) 33vw, 240px" : "(max-width:768px) 50vw, (max-width:1200px) 33vw, 300px"}
           className="object-cover transition duration-300 group-hover:scale-[1.03]"
         />
         {product.category && (
-          <span className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-white/90 backdrop-blur px-2 py-1 text-[10px] font-medium text-neutral-700 ring-1 ring-black/5">
+          <span className={`absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-white/90 backdrop-blur ${compact? 'px-1.5 py-0.5 text-[9px]':'px-2 py-1 text-[10px]'} font-medium text-neutral-700 ring-1 ring-black/5`}>
             <i className='bx bxs-tag-alt text-carrot text-[12px]' /> {product.category.name}
           </span>
         )}
       </div>
-      <div className="flex flex-col flex-1 gap-3 p-4">
+      <div className={`flex flex-col flex-1 gap-2 ${compact ? 'p-3' : 'p-4'}`}>
         <div className="space-y-1">
-          <h3 className="text-sm font-semibold leading-snug text-neutral-900 line-clamp-2">{highlightedName ?? product.name}</h3>
+          <h3 className={`${compact ? 'text-[13px]' : 'text-sm'} font-semibold leading-snug text-neutral-900 line-clamp-2`}>{highlightedName ?? product.name}</h3>
           {showDescription && product.description && variant==='default' && (
             <p className="text-[11px] leading-relaxed text-neutral-600 line-clamp-2">{product.description}</p>
           )}
         </div>
         <div className="mt-auto space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-[13px] font-semibold text-neutral-900">{price}</span>
+            <span className={`${compact ? 'text-[12px]' : 'text-[13px]'} font-semibold text-neutral-900`}>{price}</span>
           </div>
           {variant==='default' ? (
             <div className="flex items-stretch gap-2" onClick={e => e.stopPropagation()}>
@@ -105,7 +106,7 @@ export default function ProductCard({ product, showDescription = true, variant='
                 type="button"
                 onClick={()=>handleAdd()}
                 disabled={adding}
-                className="w-full h-8 inline-flex justify-center items-center gap-1 rounded-md bg-carrot text-[11px] font-semibold text-nav hover:bg-carrot-dark transition focus:outline-none focus-visible:ring-2 focus-visible:ring-carrot/60 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full h-7 px-2 inline-flex justify-center items-center gap-1 rounded-md bg-carrot text-[10px] font-semibold text-nav hover:bg-carrot-dark transition focus:outline-none focus-visible:ring-2 focus-visible:ring-carrot/60 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {adding ? <i className='text-sm bx bx-loader-alt animate-spin' /> : <i className='text-sm bx bxs-cart-add' />}
                 <span>{adding ? '...' : 'Agregar'}</span>

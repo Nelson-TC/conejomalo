@@ -30,7 +30,7 @@ export default async function CategoriesIndexPage({ searchParams }: { searchPara
 				</div>
 				<CategorySearch initial={q} />
 			</header>
-			<div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+			<div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
 				{categories.map(c => (
 					<CategoryCard key={c.id} cat={c} />
 				))}

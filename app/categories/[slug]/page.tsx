@@ -54,7 +54,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
 				<div className="text-sm text-neutral-600">{total === 0 ? 'Sin productos.' : `Mostrando ${start}–${end} de ${total}`}</div>
 			</header>
 
-			<div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+			<div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
 				{products.map((p: any) => <ProductCard key={p.id} product={p} />)}
 				{products.length === 0 && <p className="text-sm col-span-full text-neutral-600">Sin productos.</p>}
 			</div>

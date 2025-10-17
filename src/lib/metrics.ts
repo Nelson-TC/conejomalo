@@ -13,7 +13,14 @@ function parseRange(from?: string, to?: string, granularity?: string): DateRange
 }
 
 export function normalizeRange(params: { from?: string; to?: string; g?: string }): DateRange {
-  return parseRange(params.from, params.to, params.g);
+  let g = params.g;
+  if (g) {
+    const lower = g.toLowerCase();
+    if (lower === 'd') g = 'day';
+    else if (lower === 'w') g = 'week';
+    else if (lower === 'm') g = 'month';
+  }
+  return parseRange(params.from, params.to, g);
 }
 
 // Given a current range, produce the immediately preceding range of identical length

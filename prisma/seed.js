@@ -24,23 +24,23 @@ function slugify(base) {
     .replace(/^-+|-+$/g, '');
 }
 
-async function main() {
+async function runSeed() {
   console.log('Seeding categorías...');
   const categories = await Promise.all([
     prisma.category.upsert({
       where: { slug: 'alimento' },
-      update: {},
-      create: { name: 'Alimento', slug: 'alimento' }
+      update: { imageUrl: '/images/alimento.jpg' },
+      create: { name: 'Alimento', slug: 'alimento', imageUrl: '/images/alimento.jpg' }
     }),
     prisma.category.upsert({
       where: { slug: 'juguetes' },
-      update: {},
-      create: { name: 'Juguetes', slug: 'juguetes' }
+      update: { imageUrl: '/images/juguetes.jpg' },
+      create: { name: 'Juguetes', slug: 'juguetes', imageUrl: '/images/juguetes.jpg' }
     }),
     prisma.category.upsert({
       where: { slug: 'accesorios' },
-      update: {},
-      create: { name: 'Accesorios', slug: 'accesorios' }
+      update: { imageUrl: '/images/accesorios.jpg' },
+      create: { name: 'Accesorios', slug: 'accesorios', imageUrl: '/images/accesorios.jpg' }
     })
   ]);
 
@@ -90,12 +90,11 @@ async function main() {
   // ------------------------------------------------------------------
   // Generación de ÓRDENES de prueba (distribución 2 años hacia atrás)
   // ------------------------------------------------------------------
-  const ORDER_COUNT = parseInt(process.env.SEED_ORDER_COUNT || '240', 10); // ~10/mes
   const existingOrders = await prisma.order.count();
   if (existingOrders > 0) {
     console.log(`Órdenes existentes (${existingOrders}) -> se omite generación de órdenes.`);
   } else {
-    console.log(`Generando ~${ORDER_COUNT} órdenes de prueba (2 años hacia atrás)...`);
+    console.log('Generando órdenes de prueba: 6 por día (2 años hacia atrás)...');
 
     // Traer un subconjunto de productos para acelerar (ej: primeros 120)
     const products = await prisma.product.findMany({
@@ -110,15 +109,7 @@ async function main() {
       const end = new Date();
       const startRange = new Date();
       startRange.setFullYear(end.getFullYear() - 2);
-
-      // Prepara meses (YYYY-MM) para distribuir pedidos
-      const months = [];
-      const cursor = new Date(startRange.getTime());
-      cursor.setDate(1);
-      while (cursor <= end) {
-        months.push(new Date(cursor.getTime()));
-        cursor.setMonth(cursor.getMonth() + 1);
-      }
+      startRange.setHours(0,0,0,0);
 
       // Distribución de estados (ponderada)
       const STATUS_WEIGHTS = [
@@ -140,29 +131,19 @@ async function main() {
 
       function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
-      let remaining = ORDER_COUNT;
       const ordersToCreate = [];
-
-      for (let m = 0; m < months.length && remaining > 0; m++) {
-        const monthDate = months[m];
-        const year = monthDate.getFullYear();
-        const month = monthDate.getMonth();
-        // Cantidad aproximada de órdenes ese mes (entre 6 y 14) pero no excede remaining
-        let monthTarget = randomInt(6, 14);
-        if (monthTarget > remaining) monthTarget = remaining;
-        remaining -= monthTarget;
-
-        for (let i = 0; i < monthTarget; i++) {
-          // Fecha: día aleatorio del mes + hora aleatoria
-            const day = randomInt(1, 28); // evitamos problemas con meses cortos
-            const createdAt = new Date(year, month, day, randomInt(0, 23), randomInt(0, 59), randomInt(0, 59));
-
-          // Número de items
+      // Recorremos día por día y generamos 6 órdenes por día
+      for (let d = new Date(startRange.getTime()); d <= end; d.setDate(d.getDate() + 1)) {
+        const year = d.getFullYear();
+        const month = d.getMonth();
+        const day = d.getDate();
+        const ORDERS_PER_DAY = 6;
+        for (let i = 0; i < ORDERS_PER_DAY; i++) {
+          const createdAt = new Date(year, month, day, randomInt(0, 23), randomInt(0, 59), randomInt(0, 59));
           const itemCount = randomInt(1, 4);
           const usedIdx = new Set();
           const items = [];
           for (let j = 0; j < itemCount; j++) {
-            // producto distinto por item
             let pIdx;
             let loopSafe = 0;
             do {
@@ -173,32 +154,22 @@ async function main() {
             usedIdx.add(pIdx);
             const p = products[pIdx];
             const quantity = randomInt(1, 5);
-            items.push({
-              productId: p.id,
-              name: p.name,
-              slug: p.slug,
-              unitPrice: p.price,
-              quantity
-            });
+            items.push({ productId: p.id, name: p.name, slug: p.slug, unitPrice: p.price, quantity });
           }
-
           let subtotal = items.reduce((sum, it) => sum + Number(it.unitPrice) * it.quantity, 0);
-          // Shipping pseudo aleatorio pequeño para diferenciación
-          const shipping = Math.random() < 0.7 ? Number((Math.random() * 8 + 2).toFixed(2)) : 0; // 70% cobran envío
+          const shipping = Math.random() < 0.7 ? Number((Math.random() * 8 + 2).toFixed(2)) : 0;
           subtotal = Number(subtotal.toFixed(2));
           const total = Number((subtotal + shipping).toFixed(2));
-
           const status = pickStatus(Math.random());
           const customerIndex = randomInt(1, 1200);
           const customerName = `Cliente ${customerIndex}`;
-          const phone = `+34${randomInt(600000000, 699999999)}`; // patrón español ficticio
-
+          const phone = `+34${randomInt(600000000, 699999999)}`;
           ordersToCreate.push({
             customer: customerName,
             email: `cliente${customerIndex}@test.com`,
             address: `Dirección ${customerIndex}, Ciudad Demo`,
-            subtotal: subtotal,
-            total: total,
+            subtotal,
+            total,
             createdAt,
             phone,
             status,
@@ -239,11 +210,17 @@ async function main() {
   console.log('Seed completado.');
 }
 
-main()
-  .catch(e => {
-    console.error('Error en seed:', e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+// Export para uso programático
+module.exports = { runSeed };
+
+// Ejecución directa desde CLI
+if (require.main === module) {
+  runSeed()
+    .catch(e => {
+      console.error('Error en seed:', e);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}

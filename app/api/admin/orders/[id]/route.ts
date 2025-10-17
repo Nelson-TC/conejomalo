@@ -12,7 +12,27 @@ export async function GET(_: Request, { params }: Params) {
     await requirePermission('order:read');
     const order = await prisma.order.findUnique({ where: { id: params.id }, include: { items: true, user: { select: { id: true, email: true } } } });
     if (!order) return err(404,'NOT_FOUND');
-    return NextResponse.json(order);
+    const items = order.items.map(it => ({
+      productName: it.name,
+      productSlug: it.slug,
+      productId: it.productId,
+      qty: it.quantity,
+      unitPrice: it.unitPrice,
+      total: (it.quantity * Number(it.unitPrice))
+    }));
+    return NextResponse.json({
+      id: order.id,
+      status: order.status,
+      customerName: order.customer,
+      customerEmail: order.email,
+      customerPhone: order.phone,
+      customerAddress: order.address,
+      subtotal: order.subtotal,
+      total: order.total,
+      createdAt: order.createdAt,
+      userEmail: (order as any).user?.email || null,
+      items
+    });
   } catch (e:any) {
     if (e instanceof Error) {
       if (e.message === 'UNAUTHENTICATED') return err(401,'UNAUTHENTICATED');
@@ -42,4 +62,9 @@ export async function PATCH(req: Request, { params }: Params) {
     }
     return err(500,'SERVER_ERROR');
   }
+}
+
+export async function PUT(req: Request, ctx: Params) {
+  // alias for PATCH to support mobile contract
+  return PATCH(req, ctx);
 }

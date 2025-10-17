@@ -8,13 +8,17 @@ function err(status: number, code: string, message?: string) { return NextRespon
 
 interface Params { params: { id: string } }
 
+async function findRoleByIdOrName(idOrName: string) {
+  return prisma.roleEntity.findFirst({
+    where: { OR: [ { id: idOrName }, { name: idOrName } ] },
+    include: { rolePerms: { include: { permission: true } }, userRoles: { select: { userId: true } } }
+  });
+}
+
 export async function GET(_: Request, { params }: Params) {
   try {
     await requirePermission('role:read');
-    const role = await prisma.roleEntity.findUnique({
-      where: { id: params.id },
-      include: { rolePerms: { include: { permission: true } }, userRoles: { select: { userId: true } } }
-    });
+    const role = await findRoleByIdOrName(params.id);
     if (!role) return err(404,'NOT_FOUND');
     return NextResponse.json({
       id: role.id,
@@ -41,14 +45,14 @@ export async function PUT(req: Request, { params }: Params) {
     const description = body.description === null ? null : (body.description ? String(body.description).trim() : undefined);
     const permissions: string[] | undefined = Array.isArray(body.permissions) ? body.permissions.map(String) : undefined;
 
-    const existing = await prisma.roleEntity.findUnique({ where: { id: params.id } });
+  const existing = await prisma.roleEntity.findFirst({ where: { OR: [ { id: params.id }, { name: params.id } ] } });
     if (!existing) return err(404,'NOT_FOUND');
 
-    const updated = await prisma.roleEntity.update({ where: { id: params.id }, data: { label, description } });
+  const updated = await prisma.roleEntity.update({ where: { id: existing.id }, data: { label, description } });
 
     if (permissions) {
       // reset
-      await prisma.rolePermission.deleteMany({ where: { roleId: updated.id } });
+  await prisma.rolePermission.deleteMany({ where: { roleId: updated.id } });
       if (permissions.length) {
         const permRows = await prisma.permission.findMany({ where: { key: { in: permissions } } });
         if (permRows.length) {
@@ -72,7 +76,7 @@ export async function PUT(req: Request, { params }: Params) {
 export async function DELETE(_: Request, { params }: Params) {
   try {
     await requirePermission('role:update');
-    const existing = await prisma.roleEntity.findUnique({ where: { id: params.id } });
+  const existing = await prisma.roleEntity.findFirst({ where: { OR: [ { id: params.id }, { name: params.id } ] } });
     if (!existing) return err(404,'NOT_FOUND');
     await prisma.rolePermission.deleteMany({ where: { roleId: existing.id } });
     await prisma.userRole.deleteMany({ where: { roleId: existing.id } });

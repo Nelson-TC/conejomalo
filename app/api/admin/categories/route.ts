@@ -10,11 +10,27 @@ function err(status: number, code: string, message?: string) {
   return NextResponse.json({ error: message || code, code }, { status });
 }
 
-export async function GET() {
+export async function GET(req: Request) {
 	try {
 		await requirePermission('category:read');
-		const categories = await prisma.category.findMany({ orderBy: { createdAt: 'desc' } });
-		return NextResponse.json(categories);
+		const { searchParams } = new URL(req.url);
+		const pageParam = searchParams.get('page');
+		const perParam = searchParams.get('per');
+		const q = (searchParams.get('q') || '').trim();
+		const hasParams = Boolean(pageParam || perParam || q);
+		const where: any = {};
+		if (q) where.OR = [ { name: { contains: q, mode: 'insensitive' } }, { slug: { contains: q, mode: 'insensitive' } } ];
+		if (!hasParams) {
+			const categories = await prisma.category.findMany({ where, orderBy: { createdAt: 'desc' } });
+			return NextResponse.json(categories);
+		}
+		const page = Math.max(parseInt(pageParam || '1', 10) || 1, 1);
+		const per = Math.min(Math.max(parseInt(perParam || '20', 10) || 20, 1), 100);
+		const [total, items] = await Promise.all([
+			prisma.category.count({ where }),
+			prisma.category.findMany({ where, orderBy: { createdAt: 'desc' }, skip: (page-1)*per, take: per })
+		]);
+		return NextResponse.json({ items, page, per, total, totalPages: Math.max(1, Math.ceil(total / per)) });
 	} catch (e: any) {
 		if (e instanceof Error) {
 			if (e.message === 'UNAUTHENTICATED') return err(401,'UNAUTHENTICATED');
@@ -40,12 +56,16 @@ export async function POST(req: Request) {
 			const f = form.get('image');
 			if (f instanceof File && f.size > 0) file = f;
 		} else {
-			const body = await req.json();
-			name = (body.name||'').trim();
-			active = body.active ?? true;
-		}
+				const body = await req.json();
+				name = (body.name||'').trim();
+				active = body.active ?? true;
+				// allow explicit slug on JSON create
+				if (body.slug && typeof body.slug === 'string') {
+					// only used to override default slugify(name)
+				}
+			}
 		if (!name) return err(400,'NAME_REQUIRED','Name required');
-		const slug = slugify(name);
+	const slug = slugify(name);
 
 		if (file) {
 			try {

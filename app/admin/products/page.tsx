@@ -5,7 +5,7 @@ import { getUserPermissions } from '../../../src/lib/permissions';
 
 export const dynamic = 'force-dynamic';
 
-interface SearchParams { page?: string; per?: string }
+interface SearchParams { page?: string; per?: string; q?: string; active?: string }
 const DEFAULT_PER = 20; const MAX_PER = 100;
 function parsePagination(sp: SearchParams) {
 	const page = Math.max(parseInt(sp.page || '1', 10) || 1, 1);
@@ -24,10 +24,23 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
 		canUpdate = perms.has('admin:access') || perms.has('product:update');
 	}
 	const { page, per } = parsePagination(searchParams);
-	const total = await prisma.product.count();
+	const q = (searchParams.q || '').trim();
+	const activeParam = (searchParams.active || 'all').trim(); // 'true' | 'false' | 'all'
+	const where: any = {};
+	if (activeParam && activeParam !== 'all') where.active = activeParam === 'true';
+	if (q) {
+		where.AND = (where.AND || []).concat([
+			{ OR: [
+				{ name: { contains: q, mode: 'insensitive' } },
+				{ description: { contains: q, mode: 'insensitive' } }
+			]}
+		]);
+	}
+	const total = await prisma.product.count({ where });
 	const totalPages = Math.max(1, Math.ceil(total / per));
 	const currentPage = Math.min(page, totalPages);
 	const products = await prisma.product.findMany({
+		where,
 		include: { category: true },
 		orderBy: { createdAt: 'desc' },
 		skip: (currentPage - 1) * per,
@@ -44,6 +57,29 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
 				</div>
 				{canCreate && <Link href="/admin/products/new" className="px-4 py-2 text-sm font-semibold rounded bg-carrot text-nav hover:bg-carrot-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nav">Nuevo</Link>}
 			</header>
+			{/* Toolbar de filtros */}
+			<div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+				<form action="/admin/products" method="get" className="flex flex-1 items-center gap-2">
+					<input
+						type="text"
+						name="q"
+						defaultValue={q}
+						placeholder="Buscar productos..."
+						className="flex-1 px-4 py-2 rounded-md border border-neutral-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-neutral-400"
+					/>
+					<select
+						name="active"
+						defaultValue={['true','false','all'].includes(activeParam)? activeParam : 'all'}
+						className="px-3 py-2 rounded-md border border-neutral-300 bg-white text-sm"
+						aria-label="Estado"
+					>
+						<option value="all">Todos</option>
+						<option value="true">Activos</option>
+						<option value="false">Inactivos</option>
+					</select>
+					<button type="submit" className="px-4 py-2 text-sm font-semibold rounded bg-carrot text-nav hover:bg-carrot-dark">Aplicar</button>
+				</form>
+			</div>
 			<div className="overflow-auto border rounded-lg shadow-sm bg-surface">
 				<table className="w-full text-sm text-left align-middle">
 					<thead className="text-[11px] uppercase tracking-wide bg-neutral-50 text-neutral-500">
@@ -73,18 +109,20 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
 					</tbody>
 				</table>
 			</div>
-			{totalPages > 1 && <Pagination base="/admin/products" current={currentPage} totalPages={totalPages} per={per} />}
-			<PerPageSelector base="/admin/products" per={per} />
+			{totalPages > 1 && <Pagination base="/admin/products" current={currentPage} totalPages={totalPages} per={per} q={q} active={activeParam} />}
+			<PerPageSelector base="/admin/products" per={per} q={q} active={activeParam} />
 		</div>
 	);
 }
 
-interface PaginationProps { base: string; current: number; totalPages: number; per: number }
-function Pagination({ base, current, totalPages, per }: PaginationProps) {
+interface PaginationProps { base: string; current: number; totalPages: number; per: number; q?: string; active?: string }
+function Pagination({ base, current, totalPages, per, q, active }: PaginationProps) {
 	function link(p: number) {
 		const params = new URLSearchParams();
 		if (p > 1) params.set('page', String(p));
 		if (per !== DEFAULT_PER) params.set('per', String(per));
+		if (q) params.set('q', q);
+		if (active && active !== 'all') params.set('active', active);
 		const qs = params.toString(); return qs ? `${base}?${qs}` : base;
 	}
 	const window = 2; const pages: number[] = [];
@@ -103,13 +141,15 @@ function Pagination({ base, current, totalPages, per }: PaginationProps) {
 	);
 }
 
-function PerPageSelector({ base, per }: { base: string; per: number }) {
+function PerPageSelector({ base, per, q, active }: { base: string; per: number; q?: string; active?: string }) {
 	const options = [10,20,50,100];
 	return (
 		<div className="text-[11px] text-neutral-500 flex items-center gap-1 pt-2 flex-wrap">Filas por página:
 			{options.map(o => {
 				const params = new URLSearchParams();
 				if (o !== DEFAULT_PER) params.set('per', String(o));
+				if (q) params.set('q', q);
+				if (active && active !== 'all') params.set('active', active);
 				const href = `${base}?${params.toString()}`.replace(/\?$/, '');
 				return <a key={o} href={href} className={`px-2 py-1 rounded border ${o===per? 'bg-carrot text-nav border-carrot font-semibold':'border-neutral-300 hover:bg-neutral-100'}`}>{o}</a>;
 			})}

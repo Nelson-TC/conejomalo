@@ -31,6 +31,8 @@ export function NavBar() {
   const menuPanelRef = useRef<HTMLDivElement|null>(null);
   const menuButtonRef = useRef<HTMLButtonElement|null>(null);
   const boxRef = useRef<HTMLDivElement|null>(null);
+  // Search results container (rendered in a portal)
+  const resultsRef = useRef<HTMLDivElement|null>(null);
   const [cartCount, setCartCount] = useState<number>(0);
   const [mounted, setMounted] = useState(false); // for portal safety
   useEffect(()=>{ setMounted(true); }, []);
@@ -71,7 +73,11 @@ export function NavBar() {
   useEffect(()=>{
     function onClick(e: MouseEvent) {
       const target = e.target as Node;
-      if (boxRef.current && !boxRef.current.contains(target)) setShowResults(false);
+      // Only close search results if click is outside both the input box area AND
+      // the results panel (which is portaled to document.body)
+      const clickedInsideSearchBox = !!(boxRef.current && boxRef.current.contains(target));
+      const clickedInsideResults = !!(resultsRef.current && resultsRef.current.contains(target));
+      if (!clickedInsideSearchBox && !clickedInsideResults) setShowResults(false);
       if (menuWrapperRef.current && !menuWrapperRef.current.contains(target)) setMenuOpen(false);
     }
     window.addEventListener('mousedown', onClick);
@@ -249,25 +255,28 @@ export function NavBar() {
                 {searchLoading ? (<i className="bx bx-dots-horizontal-rounded text-[1.5rem] animate-pulse" />) : null}
               </span>
             </form>
-            {showResults && (q.length === 0 || (q.length>=2)) && (
-                <div className="absolute left-0 z-50 w-full mt-2 overflow-hidden bg-white border shadow-lg rounded-xl text-neutral-700">
+            {mounted && showResults && (q.length === 0 || (q.length>=2)) && createPortal(
+              <div ref={resultsRef} className="fixed inset-x-2 top-[68px] z-[90] md:inset-auto md:left-1/2 md:-translate-x-1/2 md:top-16 md:w-[38rem]">
+                <div className="overflow-hidden bg-white border shadow-2xl rounded-xl text-neutral-700">
                   {searchLoading && <div className="px-4 py-3 text-xs text-neutral-500">Buscando...</div>}
                   {!searchLoading && results.length === 0 && q.length>=2 && (
                     <div className="px-4 py-3 text-xs text-neutral-500">Sin resultados</div>
                   )}
-                  <ul className="overflow-auto text-sm divide-y max-h-72" role="listbox" aria-label="Resultados de búsqueda">
-                    {results.map(r => (
+                  <ul className="text-sm divide-y" role="listbox" aria-label="Resultados de búsqueda">
+                    {results.slice(0, 6).map(r => (
                       <li key={r.id} role="option" aria-selected="false">
                         <Link
                           href={`/products/${r.slug}`}
                           prefetch={false}
                           onClick={()=>{ setShowResults(false); setQ(''); setResults([]); }}
-                          className="flex items-center w-full gap-3 px-4 py-3 text-left transition-colors hover:bg-neutral-200 focus:bg-neutral-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-carrot/50"
+                          className="flex items-center w-full gap-3 px-4 py-3 text-left transition-colors hover:bg-neutral-100 focus:bg-neutral-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-carrot/50"
                         >
-                          {r.imageUrl && <img src={r.imageUrl} alt={r.name} className="object-cover w-10 h-10 border rounded" />}
+                          <div className="flex items-center justify-center flex-none w-10 h-10 overflow-hidden bg-white border rounded">
+                            {/* small thumbnail with fallback */}
+                            <img src={r.imageUrl || '/images/noimage.webp'} alt={r.name} className="object-cover w-full h-full" />
+                          </div>
                           <div className="flex-1 min-w-0">
                             <div className="font-medium leading-tight truncate">{r.name}</div>
-                            <div className="text-[11px] text-neutral-500 truncate">/{r.slug}</div>
                           </div>
                           {r.price != null && (
                             <div className="text-xs font-medium text-carrot-dark whitespace-nowrap" aria-label="Precio">{formatCurrency(Number(r.price))}</div>
@@ -279,13 +288,14 @@ export function NavBar() {
                   {q.length>=2 && !searchLoading && results.length > 0 && (
                     <div className="p-2 text-right bg-neutral-50">
                       <Link href={`/search?q=${encodeURIComponent(q)}`} onClick={()=>setShowResults(false)} className="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium transition rounded-md bg-carrot text-nav hover:bg-carrot-dark">
-                        Ver todos ({results.length < 8 ? results.length : '…'})
+                        Ver todos ({results.length})
                         <i className='text-sm bx bx-right-arrow-alt'/>
                       </Link>
                     </div>
                   )}
                 </div>
-              )}
+              </div>
+            , document.body)}
           </div>
         </div>
     {/* Right: auth / account */}
