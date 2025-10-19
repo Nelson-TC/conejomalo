@@ -109,6 +109,38 @@ components:
               qty: { type: integer }
               unitPrice: { oneOf: [ { type: string }, { type: number } ] }
               total: { oneOf: [ { type: string }, { type: number } ] }
+    UserOrderListItem:
+      type: object
+      properties:
+        id: { type: string }
+        status: { type: string, enum: [PENDING, PAID, SHIPPED, COMPLETED, CANCELED] }
+        itemsCount: { type: integer }
+        subtotal: { oneOf: [ { type: string }, { type: number } ] }
+        total: { oneOf: [ { type: string }, { type: number } ] }
+        createdAt: { type: string, format: date-time }
+    UserOrderDetail:
+      type: object
+      properties:
+        id: { type: string }
+        status: { type: string, enum: [PENDING, PAID, SHIPPED, COMPLETED, CANCELED] }
+        createdAt: { type: string, format: date-time }
+        customerName: { type: string }
+        customerEmail: { type: string }
+        customerPhone: { type: string, nullable: true }
+        customerAddress: { type: string, nullable: true }
+        subtotal: { oneOf: [ { type: string }, { type: number } ] }
+        total: { oneOf: [ { type: string }, { type: number } ] }
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              productId: { type: string }
+              name: { type: string }
+              slug: { type: string }
+              qty: { type: integer }
+              unitPrice: { oneOf: [ { type: string }, { type: number } ] }
+              total: { oneOf: [ { type: string }, { type: number } ] }
     Category:
       type: object
       properties:
@@ -335,6 +367,53 @@ components:
           type: array
           items: { $ref: '#/components/schemas/MetricsRecentOrder' }
 paths:
+  /orders/mine:
+    get:
+      summary: Listar pedidos del usuario autenticado
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1 }
+        - in: query
+          name: per
+          schema: { type: integer, minimum: 1, maximum: 100 }
+        - in: query
+          name: status
+          schema: { type: string, enum: [PENDING, PAID, SHIPPED, COMPLETED, CANCELED] }
+      responses:
+        '200':
+          description: Lista paginada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/UserOrderListItem' }
+                  page: { type: integer }
+                  per: { type: integer }
+                  total: { type: integer }
+                  totalPages: { type: integer }
+        '401': { description: No autenticado, content: { application/json: { schema: { $ref: '#/components/schemas/ApiError' } } } }
+        '500': { description: Error, content: { application/json: { schema: { $ref: '#/components/schemas/ApiError' } } } }
+  /orders/mine/{id}:
+    get:
+      summary: Obtener detalle de un pedido del usuario autenticado
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Ok, content: { application/json: { schema: { $ref: '#/components/schemas/UserOrderDetail' } } } }
+        '401': { description: No autenticado, content: { application/json: { schema: { $ref: '#/components/schemas/ApiError' } } } }
+        '404': { description: No encontrado, content: { application/json: { schema: { $ref: '#/components/schemas/ApiError' } } } }
+        '500': { description: Error, content: { application/json: { schema: { $ref: '#/components/schemas/ApiError' } } } }
   /products:
     get:
       summary: Listar productos públicos
