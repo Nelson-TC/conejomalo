@@ -1,7 +1,7 @@
 # Metodología SCRUM — Reingeniería ConejoMalo
 
 ## 1. Resumen
-Este documento formaliza la ejecución de la reingeniería de **ConejoMalo** bajo SCRUM. Incluye roles, ceremonias, artefactos, definición de listo (DoR), definición de hecho (DoD), plan de sprints con fechas, backlog priorizado, historias de usuario, tablero To‑Do y matriz de riesgos.
+Este documento formaliza la ejecución de la reingeniería de **ConejoMalo** bajo SCRUM. Incluye roles, ceremonias, artefactos, definición de listo (DoR), definición de hecho (DoD), plan de sprints con fechas, backlog priorizado, historias de usuario, tablero To‑Do, diagrama de Gantt y matriz de riesgos.
 
 ---
 
@@ -53,7 +53,21 @@ Una historia entra a sprint si:
 
 ---
 
-## 9. Plan de Sprints (alineado al cronograma)
+## 9. Diagrama de Gantt (texto)
+```
+Fase 1  Definición            ██████████  (2026-03-16 → 2026-03-29)
+Fase 2  Setup Infraestructura ██████████  (2026-03-30 → 2026-04-12)
+Fase 3  Refactor Backend      ██████████  (2026-04-13 ��� 2026-04-26)
+Fase 4  Seguridad & Auth      ██████████  (2026-04-27 → 2026-05-10)
+Fase 5  Testing               █████       (2026-05-11 → 2026-05-17)
+Fase 6  Optimizaciones        █████       (2026-05-18 → 2026-05-24)
+Fase 7  Documentación         █████       (2026-05-25 → 2026-05-31)
+Fase 8  Deployment & Demo     █████       (2026-06-01 → 2026-06-07)
+```
+
+---
+
+## 10. Plan de Sprints (alineado al cronograma)
 **Inicio previsto:** lunes **2026‑03‑16** (mediados de marzo). Sprints de 2 semanas.
 
 ### Sprint 1 (2026‑03‑16 → 2026‑03‑29) — Fase 1: Definición
@@ -114,7 +128,7 @@ Una historia entra a sprint si:
 
 ---
 
-## 10. Backlog priorizado (alto nivel)
+## 11. Backlog priorizado (alto nivel)
 1. Separación Frontend/Backend
 2. Arquitectura limpia (Clean/Hexagonal)
 3. Persistencia con Repository Pattern
@@ -130,7 +144,7 @@ Una historia entra a sprint si:
 
 ---
 
-## 11. Historias de Usuario (con criterios de aceptación)
+## 12. Historias de Usuario (con criterios de aceptación)
 
 ### HU‑01 Autenticación
 **Como** usuario
@@ -198,7 +212,7 @@ Una historia entra a sprint si:
 
 ---
 
-## 12. Tablero To‑Do sugerido
+## 13. Tablero To‑Do sugerido
 **Columnas:**
 - **Backlog**
 - **To‑Do (Sprint)**
@@ -210,7 +224,7 @@ Una historia entra a sprint si:
 
 ---
 
-## 13. Matriz de riesgos y mitigaciones
+## 14. Matriz de riesgos y mitigaciones
 | Riesgo | Impacto | Probabilidad | Mitigación |
 |---|---|---|---|
 | Retraso en setup de infraestructura | Alto | Medio | Definir plantillas base y usar Docker Compose desde el día 1. |
@@ -222,7 +236,7 @@ Una historia entra a sprint si:
 
 ---
 
-## 14. Métricas de seguimiento
+## 15. Métricas de seguimiento
 - Velocidad por sprint
 - Cobertura de tests críticos
 - Tiempo de ciclo
