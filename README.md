@@ -16,8 +16,9 @@
 6. [API](#api)
 7. [Autenticación & Carrito](#autenticación--carrito)
 8. [Despliegue](#despliegue)
-9. [Roadmap](#roadmap)
-10. [Licencia](#licencia)
+9. [Manual técnico](#manual-técnico)
+10. [Roadmap](#roadmap)
+11. [Licencia](#licencia)
 
 ## Características
 - Catálogo de productos y categorías.
@@ -93,6 +94,9 @@ Detalles en `docs/auth-cart.md`.
 
 ## Despliegue
 Guía en `docs/despliegue.md` (Vercel, DO App Platform, Docker Compose, checklist prod).
+
+## Manual técnico
+Ver `docs/manual-tecnico.md`.
 
 ## Roadmap
 - [ ] Persistir carrito en DB para usuarios.
