@@ -1,7 +1,7 @@
 # Metodología SCRUM — Reingeniería ConejoMalo
 
 ## 1. Resumen
-Este documento formaliza la ejecución de la reingeniería de **ConejoMalo** bajo SCRUM. Incluye roles, ceremonias, artefactos, definición de listo (DoR), definición de hecho (DoD), plan de sprints con fechas, backlog priorizado, historias de usuario, tablero To‑Do, diagrama de Gantt y matriz de riesgos.
+Este documento formaliza la ejecución de la reingeniería de **ConejoMalo** bajo SCRUM. Incluye roles, ceremonias, artefactos, definición de listo (DoR), definición de hecho (DoD), plan de sprints con fechas, backlog priorizado, historias de usuario, tablero To‑Do, diagrama de Gantt, matriz de riesgos y evidencias.
 
 ---
 
@@ -261,7 +261,26 @@ Fase 8  Deployment & Demo     █████       (2026-06-01 → 2026-06-07) 
 
 ---
 
-## 15. Métricas de seguimiento
+## 15. Evidencias (estado actual)
+**Repositorio:** Nelson-TC/conejomalo (único repo al momento).
+
+**Deploy activo:** https://conejomalo-r9ym.vercel.app/
+
+**Pruebas:** aún no implementadas (según cronograma, fase 5 pendiente).
+
+**Capturas del sistema en funcionamiento:**
+- Home
+  ![image4](image4)
+- Catálogo
+  ![image3](image3)
+- Carrito
+  ![image2](image2)
+- Checkout
+  ![image1](image1)
+
+---
+
+## 16. Métricas de seguimiento
 - Velocidad por sprint
 - Cobertura de tests críticos
 - Tiempo de ciclo
