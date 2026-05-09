@@ -111,3 +111,4 @@ Documentos adicionales:
 - `docs/api.md`
 - `docs/auth-cart.md`
 - `docs/despliegue.md`
+- `docs/manual-tecnico.md`
