@@ -1,7 +1,7 @@
 # Metodología SCRUM — Reingeniería ConejoMalo
 
 ## 1. Resumen
-Este documento formaliza la ejecución de la reingeniería de **ConejoMalo** bajo SCRUM. Incluye roles, ceremonias, artefactos, definición de listo (DoR), definición de hecho (DoD), plan de sprints con fechas, backlog priorizado, historias de usuario y un tablero To‑Do sugerido.
+Este documento formaliza la ejecución de la reingeniería de **ConejoMalo** bajo SCRUM. Incluye roles, ceremonias, artefactos, definición de listo (DoR), definición de hecho (DoD), plan de sprints con fechas, backlog priorizado, historias de usuario, tablero To‑Do y matriz de riesgos.
 
 ---
 
@@ -41,7 +41,7 @@ Este documento formaliza la ejecución de la reingeniería de **ConejoMalo** baj
 ## 7. Definición de Ready (DoR)
 Una historia entra a sprint si:
 - Tiene criterios de aceptación claros.
-- Está estimada (t-shirt o puntos).
+- Está estimada (t‑shirt o puntos).
 - Tiene dependencias identificadas.
 - Está priorizada por el PO.
 
@@ -53,33 +53,64 @@ Una historia entra a sprint si:
 
 ---
 
-## 9. Plan de Sprints (con fechas)
-**Referencia temporal:** inicio 2026‑05‑12 (lunes siguiente a la fecha actual).
+## 9. Plan de Sprints (alineado al cronograma)
+**Inicio previsto:** lunes **2026‑03‑16** (mediados de marzo). Sprints de 2 semanas.
 
-### Sprint 1 (2026‑05‑12 → 2026‑05‑16) — Base técnica
-**Objetivo:** separar frontend/backend y habilitar la base de desarrollo.
+### Sprint 1 (2026‑03‑16 → 2026‑03‑29) — Fase 1: Definición
+**Objetivo:** documentación y arquitectura base.
 **Entregables:**
-- Setup Next.js 15 + Tailwind
-- Setup NestJS + Prisma
-- PostgreSQL + Redis (Docker Compose)
-- CI/CD básico (lint/test/build)
+- Documento de alcance
+- Diagrama C4 (nivel 1–3)
+- Esquema de datos mejorado
 
-### Sprint 2 (2026‑05‑19 → 2026‑05‑23) — Flujo principal
-**Objetivo:** MVP funcional end‑to‑end.
+### Sprint 2 (2026‑03‑30 → 2026‑04‑12) — Fase 2: Setup Infraestructura
+**Objetivo:** habilitar entorno y separación técnica.
 **Entregables:**
-- Auth (JWT / proveedor externo)
-- Catálogo
-- Carrito persistente
-- Checkout (simulado)
-- Órdenes
+- Repos separados (frontend/backend)
+- Docker Compose
+- CI/CD básico
 
-### Sprint 3 (2026‑05‑26 → 2026‑05‑30) — Calidad y observabilidad
-**Objetivo:** estabilidad mínima para release.
+### Sprint 3 (2026‑04‑13 → 2026‑04‑26) — Fase 3: Refactorización Backend
+**Objetivo:** modularidad y persistencia robusta.
 **Entregables:**
-- Tests críticos
-- Logging estructurado
-- OpenAPI mínima
-- Ajustes de performance
+- Controllers implementados
+- Services implementados
+- Repository Pattern
+
+### Sprint 4 (2026‑04‑27 → 2026‑05‑10) — Fase 4: Seguridad & Auth
+**Objetivo:** seguridad mínima y autenticación.
+**Entregables:**
+- Auth integrada (JWT/Supabase/Auth0)
+- RBAC implementado
+- Validaciones
+
+### Sprint 5 (2026‑05‑11 → 2026‑05‑17) — Fase 5: Testing
+**Objetivo:** pruebas mínimas del flujo crítico.
+**Entregables:**
+- Tests unitarios (≈80% cobertura de módulos críticos)
+- Tests de integración
+- Tests E2E básicos
+
+### Sprint 6 (2026‑05‑18 → 2026‑05‑24) — Fase 6: Optimizaciones
+**Objetivo:** rendimiento básico.
+**Entregables:**
+- Redis implementado
+- Índices de BD optimizados
+- Caché estratégico
+
+### Sprint 7 (2026‑05‑25 → 2026‑05‑31) — Fase 7: Documentación
+**Objetivo:** documentación técnica completa.
+**Entregables:**
+- OpenAPI/Swagger
+- Arquitectura (C4 + ADR)
+- Guía de desarrollo
+
+### Sprint 8 (2026‑06‑01 → 2026‑06‑07) — Fase 8: Deployment & Demo
+**Objetivo:** despliegue y presentación final.
+**Entregables:**
+- Deploy productivo
+- Demo
+- Lecciones aprendidas
 
 ---
 
@@ -179,7 +210,19 @@ Una historia entra a sprint si:
 
 ---
 
-## 13. Métricas de seguimiento
+## 13. Matriz de riesgos y mitigaciones
+| Riesgo | Impacto | Probabilidad | Mitigación |
+|---|---|---|---|
+| Retraso en setup de infraestructura | Alto | Medio | Definir plantillas base y usar Docker Compose desde el día 1. |
+| Scope creep (incremento no planificado) | Alto | Medio | Congelar MVP y validar cambios con PO. |
+| Dependencias externas (Auth/Deploy) | Medio | Medio | Tener proveedor alterno y fallback local. |
+| Baja cobertura de tests | Medio | Alto | Enfocar tests en flujo crítico y módulos clave. |
+| Problemas de rendimiento inicial | Medio | Medio | Índices en BD y caché con Redis desde Sprint 6. |
+| Falta de claridad de requisitos | Alto | Medio | Refinement semanal y documentación de decisiones (ADR). |
+
+---
+
+## 14. Métricas de seguimiento
 - Velocidad por sprint
 - Cobertura de tests críticos
 - Tiempo de ciclo
