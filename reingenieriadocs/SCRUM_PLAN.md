@@ -264,6 +264,8 @@ Fase 8  Deployment & Demo     █████       (2026-06-01 → 2026-06-07) 
 ## 15. Evidencias (estado actual)
 **Repositorio:** Nelson-TC/conejomalo (único repo al momento).
 
+**Guía de desarrollo:** carpeta `/docs` en la raíz del repositorio.
+
 **Deploy activo:** https://conejomalo-r9ym.vercel.app/
 
 **Pruebas:** aún no implementadas (según cronograma, fase 5 pendiente).
@@ -277,6 +279,12 @@ Fase 8  Deployment & Demo     █████       (2026-06-01 → 2026-06-07) 
   ![image2](image2)
 - Checkout
   ![image1](image1)
+- Login
+  ![image8](image8)
+- Registro
+  ![image7](image7)
+- Historial de órdenes
+  ![image6](image6)
 
 ---
 
