@@ -5,6 +5,7 @@
 - [Plan de Ejecución](EXECUTION_PLAN.md)
 - [Arquitectura C4](ARCHITECTURE_C4.md)
 - [Roadmap](ROADMAP.md)
+- [Manual técnico](../docs/manual-tecnico.md)
 - [ADRs](adr/)
 
 ## ADRs
