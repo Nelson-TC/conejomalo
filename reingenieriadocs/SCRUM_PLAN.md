@@ -55,14 +55,39 @@ Una historia entra a sprint si:
 
 ## 9. Diagrama de Gantt (texto)
 ```
-Fase 1  Definición            ██████████  (2026-03-16 → 2026-03-29)
-Fase 2  Setup Infraestructura ██████████  (2026-03-30 → 2026-04-12)
-Fase 3  Refactor Backend      ██████████  (2026-04-13 ��� 2026-04-26)
-Fase 4  Seguridad & Auth      ██████████  (2026-04-27 → 2026-05-10)
-Fase 5  Testing               █████       (2026-05-11 → 2026-05-17)
-Fase 6  Optimizaciones        █████       (2026-05-18 → 2026-05-24)
-Fase 7  Documentación         █████       (2026-05-25 → 2026-05-31)
-Fase 8  Deployment & Demo     █████       (2026-06-01 → 2026-06-07)
+Leyenda: [Resp] A=Frontend  B=Backend/Infra  PO=Product Owner  SM=Scrum Master
+
+Fase 1  Definición            ██████████  (2026-03-16 → 2026-03-29) [PO,SM,A,B]
+  Dep: inicio del proyecto
+  Hito: Alcance firmado + C4 + esquema de datos
+
+Fase 2  Setup Infraestructura ██████████  (2026-03-30 → 2026-04-12) [B,A]
+  Dep: Fase 1
+  Hito: repos separados + Docker + CI/CD
+
+Fase 3  Refactor Backend      ██████████  (2026-04-13 → 2026-04-26) [B]
+  Dep: Fase 2
+  Hito: controllers/services + repository pattern
+
+Fase 4  Seguridad & Auth      ██████████  (2026-04-27 → 2026-05-10) [B,A]
+  Dep: Fase 3
+  Hito: auth integrada + RBAC + validaciones
+
+Fase 5  Testing               █████       (2026-05-11 → 2026-05-17) [A,B]
+  Dep: Fase 4
+  Hito: unit/integration/E2E básicos
+
+Fase 6  Optimizaciones        █████       (2026-05-18 → 2026-05-24) [B]
+  Dep: Fase 5
+  Hito: Redis + índices BD + caché
+
+Fase 7  Documentación         █████       (2026-05-25 → 2026-05-31) [A,B,PO]
+  Dep: Fase 6
+  Hito: OpenAPI + ADR + guía de desarrollo
+
+Fase 8  Deployment & Demo     █████       (2026-06-01 → 2026-06-07) [B,A,PO]
+  Dep: Fase 7
+  Hito: deploy + demo final + lecciones aprendidas
 ```
 
 ---
